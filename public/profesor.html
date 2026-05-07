@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Dnevnik | Profesor</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:   #0f1b2d;
+            --blue:   #1a3a5c;
+            --accent: #e8a020;
+            --light:  #f4f0e8;
+            --white:  #ffffff;
+            --green:  #27ae60;
+            --red:    #c0392b;
+            --grey:   #f8f7f4;
+        }
+
+        body { background: var(--grey); font-family: 'DM Sans', sans-serif; color: var(--navy); min-height: 100vh; }
+
+        .navbar {
+            background: var(--navy);
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-logo {
+            font-family: 'DM Serif Display', serif;
+            color: var(--white);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar-logo span {
+            background: var(--accent);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            color: var(--navy);
+        }
+        .navbar-user { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.7); font-size: 14px; }
+        .btn-logout {
+            background: rgba(255,255,255,0.1);
+            color: white; border: none;
+            padding: 8px 16px; border-radius: 4px;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            font-size: 13px; transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+        .tabs {
+            background: var(--white);
+            border-bottom: 1px solid #e8e4dc;
+            padding: 0 40px;
+            display: flex;
+        }
+        .tab {
+            padding: 18px 24px; cursor: pointer;
+            font-size: 14px; font-weight: 500;
+            color: #888; border-bottom: 3px solid transparent;
+            transition: all 0.2s; user-select: none;
+        }
+        .tab:hover { color: var(--navy); }
+        .tab.active { color: var(--navy); border-bottom-color: var(--accent); }
+
+        .main { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 32px; }
+        .page-header p { color: #888; font-size: 14px; margin-top: 4px; font-weight: 300; }
+
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid #e8e4dc;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e8e4dc;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-header h3 { font-family: 'DM Serif Display', serif; font-size: 18px; }
+        .card-body { padding: 24px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+        label {
+            font-size: 11px; font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase; color: #888;
+        }
+
+        select, input {
+            padding: 11px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 4px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; color: var(--navy);
+            background: var(--white); outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus { border-color: var(--accent); }
+        select:disabled { background: #f5f5f5; color: #aaa; cursor: not-allowed; }
+
+        .btn {
+            padding: 11px 24px; border: none; border-radius: 4px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background: var(--navy); color: white; }
+        .btn-primary:hover { background: var(--blue); }
+        .btn-success { background: var(--green); color: white; }
+        .btn-success:hover { background: #219a52; }
+
+        .btn-opravdan   { background: #d5f5e3; color: #1e8449; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-family: 'DM Sans', sans-serif; }
+        .btn-neopravdan { background: #fadbd8; color: #922b21; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 12px; margin-left: 4px; font-family: 'DM Sans', sans-serif; }
+
+        .alert {
+            padding: 12px 16px; border-radius: 4px;
+            font-size: 14px; margin-bottom: 16px; display: none;
+        }
+        .alert.show { display: block; }
+        .alert-success { background: #d5f5e3; color: #1e8449; border-left: 3px solid var(--green); }
+        .alert-error   { background: #fadbd8; color: #922b21; border-left: 3px solid var(--red); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            padding: 12px 20px; text-align: left;
+            font-size: 11px; font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase;
+            color: #aaa; background: #fafaf8;
+            border-bottom: 1px solid #e8e4dc;
+        }
+        td { padding: 13px 20px; font-size: 14px; border-bottom: 1px solid #f0ece4; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafaf8; }
+
+        .ocjena-badge {
+            display: inline-flex; align-items: center;
+            justify-content: center; width: 30px; height: 30px;
+            border-radius: 6px; font-weight: 500;
+        }
+        .ocjena-5 { background: #d5f5e3; color: #1e8449; }
+        .ocjena-4 { background: #d6eaf8; color: #1a5276; }
+        .ocjena-3 { background: #fef9e7; color: #9a7d0a; }
+        .ocjena-2 { background: #fdebd0; color: #a04000; }
+        .ocjena-1 { background: #fadbd8; color: #922b21; }
+
+        .status-badge {
+            display: inline-block; padding: 4px 10px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+        }
+        .status-opravdan   { background: #d5f5e3; color: #1e8449; }
+        .status-neopravdan { background: #fadbd8; color: #922b21; }
+        .status-na_cekanju { background: #fef9e7; color: #9a7d0a; }
+
+        .empty, .loading { text-align: center; padding: 40px; color: #bbb; font-size: 14px; }
+
+        .razredni-badge {
+            background: #d6eaf8; color: #1a5276;
+            padding: 3px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 500; margin-left: 8px;
+        }
+
+        /* Kaskadni filter */
+        .filter-bar {
+            background: var(--white);
+            border: 1px solid #e8e4dc;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: end;
+        }
+        .filter-bar .form-group label { color: var(--accent); }
+
+        .divider {
+            border: none; border-top: 1px solid #e8e4dc;
+            margin: 20px 0;
+        }
+
+        .info-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0f7ff;
+            color: #1a5276;
+            border: 1px solid #d6eaf8;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        /* Vladanje */
+        .vladanje-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-logo">
+        📖 E-Dnevnik <span>Profesor</span>
+    </div>
+    <div class="navbar-user">
+        <span id="navIme">...</span>
+        <span id="navRazredni" class="razredni-badge" style="display:none">Razredni starješina</span>
+        <button class="btn-logout" onclick="odjava()">Odjavi se</button>
+    </div>
+</nav>
+
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('ocjene', this)">✏️ Upiši ocjenu</div>
+    <div class="tab" onclick="switchTab('izostanci', this)">📅 Bilježi izostanak</div>
+    <div class="tab" id="tabPravdanje" style="display:none" onclick="switchTab('pravdanje', this)">✅ Pravdanje izostanaka</div>
+    <div class="tab" id="tabVladanje" style="display:none" onclick="switchTab('vladanje', this)">📋 Vladanje</div>
+</div>
+
+<div class="main">
+
+    <!-- ===================== UPIŠI OCJENU ===================== -->
+    <div class="page active" id="page-ocjene">
+        <div class="page-header">
+            <h1>Upiši ocjenu</h1>
+            <p>Odaberi razred i predmet, zatim odaberi učenika i upiši ocjenu</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Korak 1 — Odaberi razred i predmet</h3></div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Razred</label>
+                        <select id="selRazredOcjena" onchange="ucitajPredmeteZaRazred('ocjena')">
+                            <option value="">— Odaberi razred —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Predmet</label>
+                        <select id="selPredmetOcjena" disabled onchange="ucitajUcenikeZaRazred('ocjena')">
+                            <option value="">— Prvo odaberi razred —</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="cardUpisOcjene" style="display:none">
+            <div class="card-header"><h3>Korak 2 — Upiši ocjenu</h3></div>
+            <div class="card-body">
+                <div id="alertOcjena" class="alert"></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Učenik</label>
+                        <select id="selUcenik">
+                            <option value="">— Odaberi učenika —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ocjena</label>
+                        <select id="selOcjena">
+                            <option value="">—</option>
+                            <option value="5">5 — Odličan</option>
+                            <option value="4">4 — Vrlo dobar</option>
+                            <option value="3">3 — Dobar</option>
+                            <option value="2">2 — Dovoljan</option>
+                            <option value="1">1 — Nedovoljan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tip</label>
+                        <select id="selTip">
+                            <option value="usmeni">Usmeni</option>
+                            <option value="pismeni">Pismeni</option>
+                            <option value="domaći">Domaći</option>
+                            <option value="aktivnost">Aktivnost</option>
+                            <option value="ostalo">Ostalo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Datum</label>
+                        <input type="date" id="inputDatum">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2">
+                        <label>Komentar (opciono)</label>
+                        <input type="text" id="inputKomentar" placeholder="npr. Pismeni ispit — poglavlje 3">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="upisiOcjenu()">✏️ Upiši ocjenu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== BILJEŽI IZOSTANAK ===================== -->
+    <div class="page" id="page-izostanci">
+        <div class="page-header">
+            <h1>Bilježi izostanak</h1>
+            <p>Odaberi razred i predmet, zatim zabilježi izostanak učenika</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Korak 1 — Odaberi razred i predmet</h3></div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Razred</label>
+                        <select id="selRazredIz" onchange="ucitajPredmeteZaRazred('iz')">
+                            <option value="">— Odaberi razred —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Predmet</label>
+                        <select id="selPredmetIz" disabled onchange="ucitajUcenikeZaRazred('iz')">
+                            <option value="">— Prvo odaberi razred —</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="cardUpisIzostanka" style="display:none">
+            <div class="card-header"><h3>Korak 2 — Zabilježi izostanak</h3></div>
+            <div class="card-body">
+                <div id="alertIzostanak" class="alert"></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Učenik</label>
+                        <select id="selUcenikIz">
+                            <option value="">— Odaberi učenika —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Datum</label>
+                        <input type="date" id="inputDatumIz">
+                    </div>
+                    <div class="form-group">
+                        <label>Broj časa</label>
+                        <select id="selCas">
+                            <option value="1">1. čas</option>
+                            <option value="2">2. čas</option>
+                            <option value="3">3. čas</option>
+                            <option value="4">4. čas</option>
+                            <option value="5">5. čas</option>
+                            <option value="6">6. čas</option>
+                            <option value="7">7. čas</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="biljeziIzostanak()">📅 Zabilježi izostanak</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== PRAVDANJE (samo razredni) ===================== -->
+    <div class="page" id="page-pravdanje">
+        <div class="page-header">
+            <h1>Pravdanje izostanaka</h1>
+            <p>Pregledaj i opravdaj / neopravdaj izostanke učenika tvog razreda</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Izostanci na čekanju</h3>
+                <button class="btn btn-primary" onclick="ucitajPravdanje()" style="padding:8px 16px;font-size:13px">↻ Osvježi</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Učenik</th>
+                        <th>Datum</th>
+                        <th>Čas</th>
+                        <th>Predmet</th>
+                        <th>Status</th>
+                        <th>Akcija</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPravdanje">
+                    <tr><td colspan="6" class="loading">Učitavanje...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================== VLADANJE (samo razredni) ===================== -->
+    <div class="page" id="page-vladanje">
+        <div class="page-header">
+            <h1>Vladanje učenika</h1>
+            <p>Postavi ocjenu vladanja za učenike svog razreda</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Upiši vladanje</h3></div>
+            <div class="card-body">
+                <div id="alertVladanje" class="alert"></div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Učenik</label>
+                        <select id="selUcenikVladanje">
+                            <option value="">— Odaberi učenika —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ocjena vladanja</label>
+                        <select id="selVladanje">
+                            <option value="">—</option>
+                            <option value="5">5 — Uzorno</option>
+                            <option value="4">4 — Primjereno</option>
+                            <option value="3">3 — Zadovoljava</option>
+                            <option value="2">2 — Ne zadovoljava</option>
+                            <option value="1">1 — Loše</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Polugodište</label>
+                        <select id="selPolugodiste">
+                            <option value="1">Prvo polugodište</option>
+                            <option value="2">Drugo polugodište</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2">
+                        <label>Bilješka (opciono)</label>
+                        <input type="text" id="inputBiljeska" placeholder="npr. Uzornog vladanja, aktivan na nastavi">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="upisiVladanje()">📋 Upiši vladanje</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Pregled vladanja razreda</h3></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Učenik</th>
+                        <th>Polugodište</th>
+                        <th>Vladanje</th>
+                        <th>Bilješka</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaVladanje">
+                    <tr><td colspan="4" class="loading">Učitavanje...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const korisnik = JSON.parse(sessionStorage.getItem('korisnik') || 'null');
+    if (!korisnik || korisnik.uloga !== 'profesor') window.location.href = '/';
+
+    document.getElementById('navIme').textContent = korisnik.ime + ' ' + korisnik.prezime;
+
+    const danas = new Date().toISOString().split('T')[0];
+    document.getElementById('inputDatum').value   = danas;
+    document.getElementById('inputDatumIz').value = danas;
+
+    let profInfo = {};
+
+    // ─── INIT ───────────────────────────────────────────────
+    async function init() {
+        await provjeriRazrednog();
+        await ucitajRazredeZaProfesora();
+    }
+
+    async function provjeriRazrednog() {
+        try {
+            const res  = await fetch(`/api/profesor/${korisnik.id}/info`);
+            profInfo   = await res.json();
+            if (profInfo.je_razredni) {
+                document.getElementById('tabPravdanje').style.display = 'block';
+                document.getElementById('tabVladanje').style.display  = 'block';
+                document.getElementById('navRazredni').style.display  = 'inline-flex';
+                // Učitaj učenike razreda za vladanje
+                ucitajUcenikeRazreda(profInfo.razred_id);
+                ucitajVladanje();
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function ucitajRazredeZaProfesora() {
+        try {
+            const res     = await fetch(`/api/profesor/${korisnik.id}/razredi`);
+            const razredi = await res.json();
+            const opts    = razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
+            const empty   = '<option value="">— Odaberi razred —</option>';
+            document.getElementById('selRazredOcjena').innerHTML = empty + opts;
+            document.getElementById('selRazredIz').innerHTML     = empty + opts;
+        } catch(e) { console.error(e); }
+    }
+
+    // ─── KASKADNI DROPDOWNI ─────────────────────────────────
+    async function ucitajPredmeteZaRazred(mode) {
+        const razredId = document.getElementById(mode === 'ocjena' ? 'selRazredOcjena' : 'selRazredIz').value;
+        const selPredmet = document.getElementById(mode === 'ocjena' ? 'selPredmetOcjena' : 'selPredmetIz');
+
+        // Reset
+        selPredmet.innerHTML = '<option value="">— Učitavanje... —</option>';
+        selPredmet.disabled  = true;
+        if (mode === 'ocjena') document.getElementById('cardUpisOcjene').style.display = 'none';
+        else document.getElementById('cardUpisIzostanka').style.display = 'none';
+
+        if (!razredId) {
+            selPredmet.innerHTML = '<option value="">— Prvo odaberi razred —</option>';
+            return;
+        }
+
+        try {
+            const res      = await fetch(`/api/profesor/${korisnik.id}/razred/${razredId}/predmeti`);
+            const predmeti = await res.json();
+            const opts     = predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
+            selPredmet.innerHTML = '<option value="">— Odaberi predmet —</option>' + opts;
+            selPredmet.disabled  = false;
+        } catch(e) {
+            selPredmet.innerHTML = '<option value="">Greška pri učitavanju</option>';
+        }
+    }
+
+    async function ucitajUcenikeZaRazred(mode) {
+        const razredId   = document.getElementById(mode === 'ocjena' ? 'selRazredOcjena' : 'selRazredIz').value;
+        const predmetId  = document.getElementById(mode === 'ocjena' ? 'selPredmetOcjena' : 'selPredmetIz').value;
+        const selUcenik  = document.getElementById(mode === 'ocjena' ? 'selUcenik' : 'selUcenikIz');
+        const card       = document.getElementById(mode === 'ocjena' ? 'cardUpisOcjene' : 'cardUpisIzostanka');
+
+        if (!predmetId) { card.style.display = 'none'; return; }
+
+        try {
+            const res     = await fetch(`/api/razred/${razredId}/ucenici`);
+            const ucenici = await res.json();
+            const opts    = ucenici.map(u => `<option value="${u.id}">${u.prezime} ${u.ime}</option>`).join('');
+            selUcenik.innerHTML = '<option value="">— Odaberi učenika —</option>' + opts;
+            card.style.display  = 'block';
+        } catch(e) { console.error(e); }
+    }
+
+    async function ucitajUcenikeRazreda(razredId) {
+        try {
+            const res     = await fetch(`/api/razred/${razredId}/ucenici`);
+            const ucenici = await res.json();
+            const opts    = ucenici.map(u => `<option value="${u.id}">${u.prezime} ${u.ime}</option>`).join('');
+            document.getElementById('selUcenikVladanje').innerHTML = '<option value="">— Odaberi učenika —</option>' + opts;
+        } catch(e) { console.error(e); }
+    }
+
+    // ─── TABS ────────────────────────────────────────────────
+    function switchTab(tab, el) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('page-' + tab).classList.add('active');
+        if (tab === 'pravdanje') ucitajPravdanje();
+        if (tab === 'vladanje')  ucitajVladanje();
+    }
+
+    // ─── UPIŠI OCJENU ────────────────────────────────────────
+    async function upisiOcjenu() {
+        const ucenik_id  = document.getElementById('selUcenik').value;
+        const predmet_id = document.getElementById('selPredmetOcjena').value;
+        const ocjena     = document.getElementById('selOcjena').value;
+        const tip        = document.getElementById('selTip').value;
+        const datum      = document.getElementById('inputDatum').value;
+        const komentar   = document.getElementById('inputKomentar').value;
+        const alertEl    = document.getElementById('alertOcjena');
+
+        alertEl.classList.remove('show');
+
+        if (!ucenik_id || !predmet_id || !ocjena || !datum) {
+            prikaziAlert(alertEl, 'error', 'Molimo popunite sva obavezna polja.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/ocjena', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ucenik_id: parseInt(ucenik_id),
+                    predmet_id: parseInt(predmet_id),
+                    profesor_id: korisnik.id,
+                    ocjena: parseInt(ocjena),
+                    datum, tip, komentar
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
+            else {
+                prikaziAlert(alertEl, 'success', '✅ Ocjena uspješno upisana!');
+                document.getElementById('selOcjena').value    = '';
+                document.getElementById('inputKomentar').value = '';
+            }
+        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
+    }
+
+    // ─── BILJEŽI IZOSTANAK ───────────────────────────────────
+    async function biljeziIzostanak() {
+        const ucenik_id  = document.getElementById('selUcenikIz').value;
+        const predmet_id = document.getElementById('selPredmetIz').value;
+        const datum      = document.getElementById('inputDatumIz').value;
+        const cas_broj   = document.getElementById('selCas').value;
+        const alertEl    = document.getElementById('alertIzostanak');
+
+        alertEl.classList.remove('show');
+
+        if (!ucenik_id || !predmet_id || !datum) {
+            prikaziAlert(alertEl, 'error', 'Molimo popunite sva polja.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/izostanak', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ucenik_id: parseInt(ucenik_id),
+                    predmet_id: parseInt(predmet_id),
+                    datum, cas_broj: parseInt(cas_broj)
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
+            else prikaziAlert(alertEl, 'success', '✅ Izostanak uspješno zabilježen!');
+        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
+    }
+
+    // ─── PRAVDANJE ───────────────────────────────────────────
+    async function ucitajPravdanje() {
+        try {
+            const res = await fetch(`/api/profesor/${korisnik.id}/izostanci`);
+            const izostanci = await res.json();
+            const tb = document.getElementById('tabelaPravdanje');
+
+            if (!izostanci.length) {
+                tb.innerHTML = '<tr><td colspan="6" class="empty">Nema izostanaka na čekanju. 🎉</td></tr>';
+                return;
+            }
+
+            tb.innerHTML = izostanci.map(i => `
+                <tr id="red-${i.id}">
+                    <td><strong>${i.ucenik}</strong></td>
+                    <td>${new Date(i.datum).toLocaleDateString('bs-BA')}</td>
+                    <td>${i.cas_broj}. čas</td>
+                    <td>${i.predmet}</td>
+                    <td><span class="status-badge status-${i.status}">${statusLabel(i.status)}</span></td>
+                    <td>
+                        <button class="btn-opravdan"   onclick="promijeniStatus(${i.id}, 'opravdan')">✓ Opravdaj</button>
+                        <button class="btn-neopravdan" onclick="promijeniStatus(${i.id}, 'neopravdan')">✗ Neopravdaj</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch(e) { console.error(e); }
+    }
+
+    async function promijeniStatus(id, status) {
+        try {
+            await fetch(`/api/izostanak/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, opravdao_id: korisnik.id })
+            });
+            ucitajPravdanje();
+        } catch(e) { console.error(e); }
+    }
+
+    // ─── VLADANJE ────────────────────────────────────────────
+    async function upisiVladanje() {
+        const ucenik_id   = document.getElementById('selUcenikVladanje').value;
+        const ocjena      = document.getElementById('selVladanje').value;
+        const polugodiste = document.getElementById('selPolugodiste').value;
+        const biljeska    = document.getElementById('inputBiljeska').value;
+        const alertEl     = document.getElementById('alertVladanje');
+
+        alertEl.classList.remove('show');
+
+        if (!ucenik_id || !ocjena) {
+            prikaziAlert(alertEl, 'error', 'Odaberi učenika i ocjenu vladanja.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/vladanje', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ucenik_id: parseInt(ucenik_id),
+                    ocjena: parseInt(ocjena),
+                    polugodiste: parseInt(polugodiste),
+                    biljeska,
+                    postavio_id: korisnik.id
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska || 'Greška.');
+            else {
+                prikaziAlert(alertEl, 'success', '✅ Vladanje upisano!');
+                document.getElementById('selVladanje').value   = '';
+                document.getElementById('inputBiljeska').value = '';
+                ucitajVladanje();
+            }
+        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
+    }
+
+    async function ucitajVladanje() {
+        if (!profInfo.razred_id) return;
+        try {
+            const res      = await fetch(`/api/razred/${profInfo.razred_id}/vladanje`);
+            const vladanje = await res.json();
+            const tb       = document.getElementById('tabelaVladanje');
+
+            if (!vladanje.length) {
+                tb.innerHTML = '<tr><td colspan="4" class="empty">Nema upisanog vladanja.</td></tr>';
+                return;
+            }
+
+            tb.innerHTML = vladanje.map(v => `
+                <tr>
+                    <td><strong>${v.ucenik}</strong></td>
+                    <td>${v.polugodiste}. polugodište</td>
+                    <td><span class="ocjena-badge ocjena-${v.ocjena}">${v.ocjena}</span></td>
+                    <td style="color:#888">${v.biljeska || '—'}</td>
+                </tr>
+            `).join('');
+        } catch(e) { console.error(e); }
+    }
+
+    // ─── POMOĆNE ─────────────────────────────────────────────
+    function prikaziAlert(el, tip, poruka) {
+        el.className = `alert alert-${tip} show`;
+        el.textContent = poruka;
+        if (tip === 'success') setTimeout(() => el.classList.remove('show'), 4000);
+    }
+
+    function statusLabel(s) {
+        if (s === 'opravdan')   return 'Opravdan';
+        if (s === 'neopravdan') return 'Neopravdan';
+        return 'Na čekanju';
+    }
+
+    function odjava() {
+        sessionStorage.removeItem('korisnik');
+        window.location.href = '/';
+    }
+
+    init();
+</script>
+</body>
+</html>

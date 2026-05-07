@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Dnevnik | Prijava</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:   #0f1b2d;
+            --blue:   #1a3a5c;
+            --accent: #e8a020;
+            --light:  #f4f0e8;
+            --white:  #ffffff;
+            --error:  #c0392b;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Sans', sans-serif;
+            overflow: hidden;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(232,160,32,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(232,160,32,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            0%   { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        .wrapper {
+            display: flex;
+            width: 860px;
+            min-height: 520px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+            animation: fadeUp 0.7s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* LEFT PANEL */
+        .left {
+            flex: 1;
+            background: var(--blue);
+            padding: 56px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 60px solid rgba(232,160,32,0.08);
+        }
+
+        .left::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 40px solid rgba(232,160,32,0.06);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-family: 'DM Serif Display', serif;
+            color: var(--white);
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+
+        .left-content h1 {
+            font-family: 'DM Serif Display', serif;
+            color: var(--white);
+            font-size: 38px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .left-content h1 em {
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .left-content p {
+            color: rgba(255,255,255,0.55);
+            font-size: 15px;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+
+        .roles {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .role-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        .role-tag::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.7;
+        }
+
+        /* RIGHT PANEL */
+        .right {
+            width: 380px;
+            background: var(--light);
+            padding: 56px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .right h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        .right p.subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 36px;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1.5px solid #ddd;
+            border-radius: 4px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            color: var(--navy);
+            background: var(--white);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(232,160,32,0.15);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+            border-radius: 4px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s, transform 0.1s;
+            letter-spacing: 0.3px;
+        }
+
+        .btn:hover  { background: var(--blue); }
+        .btn:active { transform: scale(0.99); }
+
+        .btn.loading {
+            background: #888;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background: #fdecea;
+            border-left: 3px solid var(--error);
+            color: var(--error);
+            padding: 10px 14px;
+            border-radius: 2px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error-msg.show { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+    <!-- LIJEVO -->
+    <div class="left">
+        <div class="logo">
+            <div class="logo-icon">📖</div>
+            <span class="logo-text">E-Dnevnik</span>
+        </div>
+
+        <div class="left-content">
+            <h1>Digitalni<br>školski <em>dnevnik</em></h1>
+            <p>Elektrotehnička škola Tuzla</p>
+        </div>
+    </div>
+
+    <!-- DESNO -->
+    <div class="right">
+        <h2>Dobrodošli</h2>
+        <p class="subtitle">Prijavite se sa vašim nalogom</p>
+
+        <div class="error-msg" id="errorMsg">Pogrešan email ili lozinka.</div>
+
+        <div class="form-group">
+            <label for="email">Email adresa</label>
+            <input type="email" id="email" placeholder="vase.ime@skola.ba" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+            <label for="lozinka">Lozinka</label>
+            <input type="password" id="lozinka" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button class="btn" id="btnLogin" onclick="login()">Prijavi se</button>
+    </div>
+
+</div>
+
+<script>
+    // Enter tipka za login
+    document.getElementById('lozinka').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') login();
+    });
+
+    async function login() {
+        const email   = document.getElementById('email').value.trim();
+        const lozinka = document.getElementById('lozinka').value;
+        const btn     = document.getElementById('btnLogin');
+        const errMsg  = document.getElementById('errorMsg');
+
+        errMsg.classList.remove('show');
+
+        if (!email || !lozinka) {
+            errMsg.textContent = 'Molimo unesite email i lozinku.';
+            errMsg.classList.add('show');
+            return;
+        }
+
+        btn.textContent = 'Prijavljivanje...';
+        btn.classList.add('loading');
+
+        try {
+            const res  = await fetch('/api/login', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ email, lozinka })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                errMsg.textContent = data.greska || 'Greška pri prijavi.';
+                errMsg.classList.add('show');
+                return;
+            }
+
+            // Sačuvaj korisnika u sessionStorage
+            sessionStorage.setItem('korisnik', JSON.stringify(data));
+
+            // Preusmjeri prema ulozi
+            if (data.uloga === 'ucenik')   window.location.href = '/ucenik.html';
+            if (data.uloga === 'profesor') window.location.href = '/profesor.html';
+            if (data.uloga === 'admin')    window.location.href = '/admin.html';
+
+        } catch (err) {
+            errMsg.textContent = 'Ne mogu se spojiti na server.';
+            errMsg.classList.add('show');
+        } finally {
+            btn.textContent = 'Prijavi se';
+            btn.classList.remove('loading');
+        }
+    }
+</script>
+
+</body>
+</html>
