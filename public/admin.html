@@ -241,6 +241,7 @@
     <div class="tab" onclick="switchTab('razredi', this)">🏫 Razredi</div>
     <div class="tab" onclick="switchTab('predmeti', this)">📚 Predmeti</div>
     <div class="tab" onclick="switchTab('dodjela', this)">🔗 Dodjela predmeta</div>
+    <div class="tab" onclick="switchTab('raspored', this)">🗓 Raspored</div>
 </div>
 
 <div class="main">
@@ -323,6 +324,27 @@
                     <tr><td colspan="5" class="loading">Učitavanje...</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Promjena razreda ucenik -->
+        <div class="card">
+            <div class="card-header"><h3>Promijeni razred uu010denika</h3></div>
+            <div class="card-body">
+                <div id="alertPromjenaRazreda" class="alert"></div>
+                <div class="form-row" style="align-items:end">
+                    <div class="form-group" style="margin-bottom:0">
+                        <label>Uu010denik</label>
+                        <select id="selUcenikRazred"><option value="">&#8212; Odaberi uu010denika &#8212;</option></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label>Novi razred</label>
+                        <select id="selNoviRazred"><option value="">&#8212; Odaberi razred &#8212;</option></select>
+                    </div>
+                </div>
+                <div style="margin-top:16px">
+                    <button class="btn btn-primary" onclick="promijeniRazredUcenika()">&#x1F504; Promijeni razred</button>
+                </div>
+            </div>
         </div>
 
         <!-- Dodjela razrednog profesora -->
@@ -583,6 +605,85 @@
         </div>
     </div>
 
+    <!-- ===================== RASPORED ===================== -->
+    <div class="page" id="page-raspored">
+        <div class="page-header">
+            <h1>Raspored u010dasova</h1>
+            <p>Kreiraj i upravljau0161 rasporedom za sve razrede</p>
+        </div>
+
+        <div class="two-col">
+            <div class="card">
+                <div class="card-header"><h3>Novi termin</h3></div>
+                <div class="card-body">
+                    <div id="alertRaspored" class="alert"></div>
+                    <div class="form-group">
+                        <label>Razred</label>
+                        <select id="rRazred"><option value="">&#8212; Odaberi razred &#8212;</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Predmet</label>
+                        <select id="rPredmet"><option value="">&#8212; Odaberi predmet &#8212;</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Profesor</label>
+                        <select id="rProfesor"><option value="">&#8212; Odaberi profesora &#8212;</option></select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Dan</label>
+                            <select id="rDan">
+                                <option value="Ponedjeljak">Ponedjeljak</option>
+                                <option value="Utorak">Utorak</option>
+                                <option value="Srijeda">Srijeda</option>
+                                <option value="Cetvru006Bak">&#268;etvrtak</option>
+                                <option value="Petak">Petak</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Broj u010dasa</label>
+                            <select id="rCas">
+                                <option value="1">1. u010das</option>
+                                <option value="2">2. u010das</option>
+                                <option value="3">3. u010das</option>
+                                <option value="4">4. u010das</option>
+                                <option value="5">5. u010das</option>
+                                <option value="6">6. u010das</option>
+                                <option value="7">7. u010das</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Vrijeme od (opciono)</label>
+                            <input type="time" id="rVrijemeOd">
+                        </div>
+                        <div class="form-group">
+                            <label>Vrijeme do (opciono)</label>
+                            <input type="time" id="rVrijemeDo">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="kreirajTermin()">&#10133; Dodaj termin</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Pregled rasporeda</h3>
+                    <select id="filterRazredRaspored" onchange="ucitajRaspored()" style="width:auto;padding:8px 12px;font-size:13px">
+                        <option value="">Svi razredi</option>
+                    </select>
+                </div>
+                <table>
+                    <thead><tr><th>Razred</th><th>Dan</th><th>u010cas</th><th>Predmet</th><th>Profesor</th><th>Vrijeme</th><th></th></tr></thead>
+                    <tbody id="tabelaRaspored">
+                        <tr><td colspan="7" class="loading">Uu010ditavanje...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- MODAL POTVRDE BRISANJA -->
@@ -610,11 +711,12 @@
         document.getElementById('page-' + tab).classList.add('active');
         const actions = {
             pregled:      () => { ucitajPregled(); ucitajStatistike(); },
-            korisnici:    () => { ucitajKorisnike(); ucitajSelektoreRazredni(); },
+            korisnici:    () => { ucitajKorisnike(); ucitajSelektoreRazredni(); ucitajSelektorePromjenaRazreda(); },
             noviKorisnik: () => { ucitajRazredeZaForme(); },
             razredi:      () => ucitajRazrede(),
             predmeti:     () => ucitajPredmete(),
             dodjela:      () => ucitajDodjelu(),
+            raspored:     () => { ucitajRaspored(); ucitajSelektoreRaspored(); },
         };
         if (actions[tab]) actions[tab]();
     }
@@ -1041,6 +1143,122 @@
     function odjava() {
         sessionStorage.removeItem('korisnik');
         window.location.href = '/';
+    }
+
+
+    // ─── PROMJENA RAZREDA UCENIK ──────────────────────────────
+    async function ucitajSelektorePromjenaRazreda() {
+        try {
+            const [kRes, rRes] = await Promise.all([
+                fetch('/api/admin/korisnici'),
+                fetch('/api/admin/razredi')
+            ]);
+            const korisnici = await kRes.json();
+            const razredi   = await rRes.json();
+            const ucenici   = korisnici.filter(k => k.uloga === 'ucenik');
+            document.getElementById('selUcenikRazred').innerHTML =
+                '<option value="">— Odaberi ucenik —</option>' +
+                ucenici.map(u => `<option value="${u.id}">${u.ime} ${u.prezime}</option>`).join('');
+            document.getElementById('selNoviRazred').innerHTML =
+                '<option value="">— Odaberi razred —</option>' +
+                razredi.map(r => `<option value="${r.id}">${r.naziv} (${r.skolska_god})</option>`).join('');
+        } catch(e) {}
+    }
+
+    async function promijeniRazredUcenika() {
+        const korisnik_id = document.getElementById('selUcenikRazred').value;
+        const razred_id   = document.getElementById('selNoviRazred').value;
+        const alertEl     = document.getElementById('alertPromjenaRazreda');
+        if (!korisnik_id || !razred_id) {
+            prikaziAlert(alertEl, 'error', 'Odaberi ucenika i razred.');
+            return;
+        }
+        try {
+            const res = await fetch(`/api/admin/ucenik/${korisnik_id}/razred`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ razred_id: parseInt(razred_id) })
+            });
+            const data = await res.json();
+            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
+            else prikaziAlert(alertEl, 'success', 'Razred ucenika uspjesno promijenjen!');
+        } catch(e) { prikaziAlert(alertEl, 'error', 'Greska.'); }
+    }
+
+    // ─── RASPORED ────────────────────────────────────────────
+    async function ucitajSelektoreRaspored() {
+        try {
+            const [kRes, pRes, rRes] = await Promise.all([
+                fetch('/api/admin/korisnici'),
+                fetch('/api/predmeti'),
+                fetch('/api/admin/razredi')
+            ]);
+            const korisnici = await kRes.json();
+            const predmeti  = await pRes.json();
+            const razredi   = await rRes.json();
+            const profesori = korisnici.filter(k => k.uloga === 'profesor');
+            const razredOpts = razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
+            document.getElementById('rRazred').innerHTML = '<option value="">— Odaberi razred —</option>' + razredOpts;
+            document.getElementById('rPredmet').innerHTML = '<option value="">— Odaberi predmet —</option>' + predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
+            document.getElementById('rProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.id}">${p.ime} ${p.prezime}</option>`).join('');
+            document.getElementById('filterRazredRaspored').innerHTML = '<option value="">Svi razredi</option>' + razredOpts;
+        } catch(e) {}
+    }
+
+    async function ucitajRaspored() {
+        const filter = document.getElementById('filterRazredRaspored');
+        const razredId = filter ? filter.value : '';
+        try {
+            const res     = await fetch('/api/admin/raspored');
+            let lista     = await res.json();
+            if (razredId) lista = lista.filter(r => String(r.razred_id) === razredId || r.razred === document.getElementById('filterRazredRaspored').options[document.getElementById('filterRazredRaspored').selectedIndex].text);
+            const tb = document.getElementById('tabelaRaspored');
+            tb.innerHTML = lista.length
+                ? lista.map(r => `
+                    <tr>
+                        <td><strong>${r.razred}</strong></td>
+                        <td>${r.dan}</td>
+                        <td>${r.cas_broj}. cas</td>
+                        <td>${r.predmet}</td>
+                        <td style="font-size:13px;color:#888">${r.profesor}</td>
+                        <td style="font-size:12px;color:#aaa">${r.vrijeme_od ? r.vrijeme_od + '-' + r.vrijeme_do : '—'}</td>
+                        <td><button class="btn-delete" onclick="obrisiTermin(${r.id})">Obrisi</button></td>
+                    </tr>`).join('')
+                : '<tr><td colspan="7" class="empty">Nema unesenih termina.</td></tr>';
+        } catch(e) {}
+    }
+
+    async function kreirajTermin() {
+        const razred_id   = document.getElementById('rRazred').value;
+        const predmet_id  = document.getElementById('rPredmet').value;
+        const profesor_id = document.getElementById('rProfesor').value;
+        const dan         = document.getElementById('rDan').value;
+        const cas_broj    = document.getElementById('rCas').value;
+        const vrijeme_od  = document.getElementById('rVrijemeOd').value;
+        const vrijeme_do  = document.getElementById('rVrijemeDo').value;
+        const alertEl     = document.getElementById('alertRaspored');
+        if (!razred_id || !predmet_id || !profesor_id || !dan || !cas_broj) {
+            prikaziAlert(alertEl, 'error', 'Popuni sva obavezna polja.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/admin/raspored', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ razred_id: +razred_id, predmet_id: +predmet_id, profesor_id: +profesor_id, dan, cas_broj: +cas_broj, vrijeme_od: vrijeme_od||null, vrijeme_do: vrijeme_do||null })
+            });
+            const data = await res.json();
+            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
+            else { prikaziAlert(alertEl, 'success', 'Termin dodan!'); ucitajRaspored(); }
+        } catch(e) { prikaziAlert(alertEl, 'error', 'Greska.'); }
+    }
+
+    async function obrisiTermin(id) {
+        if (!confirm('Obrisati ovaj termin?')) return;
+        try {
+            const res = await fetch(`/api/admin/raspored/${id}`, { method: 'DELETE' });
+            if (res.ok) ucitajRaspored();
+        } catch(e) {}
     }
 
     init();
