@@ -1033,7 +1033,7 @@
             const dodjele   = await dRes.json();
 
             const profesori = korisnici.filter(k => k.uloga === 'profesor');
-            document.getElementById('ddProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.profesor_id || p.id}">${p.ime} ${p.prezime}</option>`).join('');
+            document.getElementById('ddProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.profesor_id}">${p.ime} ${p.prezime}</option>`).join('');
             document.getElementById('ddPredmet').innerHTML  = '<option value="">— Odaberi predmet —</option>'  + predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
             document.getElementById('ddRazred').innerHTML   = '<option value="">— Odaberi razred —</option>'   + razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
 
