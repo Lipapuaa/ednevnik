@@ -22,51 +22,32 @@
         body { background: var(--grey); font-family: 'DM Sans', sans-serif; color: var(--navy); min-height: 100vh; }
 
         .navbar {
-            background: var(--navy);
-            padding: 0 40px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: var(--navy); padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
         }
         .navbar-logo {
-            font-family: 'DM Serif Display', serif;
-            color: var(--white);
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-family: 'DM Serif Display', serif; color: var(--white);
+            font-size: 20px; display: flex; align-items: center; gap: 10px;
         }
         .navbar-logo span {
-            background: var(--accent);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 13px;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 500;
-            color: var(--navy);
+            background: var(--accent); border-radius: 6px; padding: 4px 8px;
+            font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--navy);
         }
         .navbar-user { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.7); font-size: 14px; }
         .btn-logout {
-            background: rgba(255,255,255,0.1);
-            color: white; border: none;
-            padding: 8px 16px; border-radius: 4px;
-            cursor: pointer; font-family: 'DM Sans', sans-serif;
-            font-size: 13px; transition: background 0.2s;
+            background: rgba(255,255,255,0.1); color: white; border: none;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; transition: background 0.2s;
         }
         .btn-logout:hover { background: rgba(255,255,255,0.2); }
 
         .tabs {
-            background: var(--white);
-            border-bottom: 1px solid #e8e4dc;
-            padding: 0 40px;
-            display: flex;
+            background: var(--white); border-bottom: 1px solid #e8e4dc;
+            padding: 0 40px; display: flex;
         }
         .tab {
-            padding: 18px 24px; cursor: pointer;
-            font-size: 14px; font-weight: 500;
-            color: #888; border-bottom: 3px solid transparent;
-            transition: all 0.2s; user-select: none;
+            padding: 18px 24px; cursor: pointer; font-size: 14px; font-weight: 500;
+            color: #888; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none;
         }
         .tab:hover { color: var(--navy); }
         .tab.active { color: var(--navy); border-bottom-color: var(--accent); }
@@ -80,25 +61,19 @@
         .page-header p { color: #888; font-size: 14px; margin-top: 4px; font-weight: 300; }
 
         .card {
-            background: var(--white);
-            border-radius: 8px;
-            border: 1px solid #e8e4dc;
-            overflow: hidden;
-            margin-bottom: 24px;
+            background: var(--white); border-radius: 8px;
+            border: 1px solid #e8e4dc; overflow: hidden; margin-bottom: 24px;
         }
         .card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e8e4dc;
+            padding: 20px 24px; border-bottom: 1px solid #e8e4dc;
             display: flex; align-items: center; justify-content: space-between;
         }
         .card-header h3 { font-family: 'DM Serif Display', serif; font-size: 18px; }
         .card-body { padding: 24px; }
 
         .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 20px;
         }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
 
@@ -108,21 +83,16 @@
         }
 
         select, input {
-            padding: 11px 14px;
-            border: 1.5px solid #ddd;
-            border-radius: 4px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px; color: var(--navy);
-            background: var(--white); outline: none;
-            transition: border-color 0.2s;
+            padding: 11px 14px; border: 1.5px solid #ddd; border-radius: 4px;
+            font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--navy);
+            background: var(--white); outline: none; transition: border-color 0.2s;
         }
         select:focus, input:focus { border-color: var(--accent); }
         select:disabled { background: #f5f5f5; color: #aaa; cursor: not-allowed; }
 
         .btn {
             padding: 11px 24px; border: none; border-radius: 4px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px; font-weight: 500;
+            font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
             cursor: pointer; transition: all 0.2s;
         }
         .btn-primary { background: var(--navy); color: white; }
@@ -133,30 +103,24 @@
         .btn-opravdan   { background: #d5f5e3; color: #1e8449; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-family: 'DM Sans', sans-serif; }
         .btn-neopravdan { background: #fadbd8; color: #922b21; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 12px; margin-left: 4px; font-family: 'DM Sans', sans-serif; }
 
-        .alert {
-            padding: 12px 16px; border-radius: 4px;
-            font-size: 14px; margin-bottom: 16px; display: none;
-        }
+        .alert { padding: 12px 16px; border-radius: 4px; font-size: 14px; margin-bottom: 16px; display: none; }
         .alert.show { display: block; }
         .alert-success { background: #d5f5e3; color: #1e8449; border-left: 3px solid var(--green); }
         .alert-error   { background: #fadbd8; color: #922b21; border-left: 3px solid var(--red); }
 
         table { width: 100%; border-collapse: collapse; }
         th {
-            padding: 12px 20px; text-align: left;
-            font-size: 11px; font-weight: 500;
+            padding: 12px 20px; text-align: left; font-size: 11px; font-weight: 500;
             letter-spacing: 1px; text-transform: uppercase;
-            color: #aaa; background: #fafaf8;
-            border-bottom: 1px solid #e8e4dc;
+            color: #aaa; background: #fafaf8; border-bottom: 1px solid #e8e4dc;
         }
         td { padding: 13px 20px; font-size: 14px; border-bottom: 1px solid #f0ece4; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafaf8; }
 
         .ocjena-badge {
-            display: inline-flex; align-items: center;
-            justify-content: center; width: 30px; height: 30px;
-            border-radius: 6px; font-weight: 500;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 6px; font-weight: 500;
         }
         .ocjena-5 { background: #d5f5e3; color: #1e8449; }
         .ocjena-4 { background: #d6eaf8; color: #1a5276; }
@@ -164,10 +128,7 @@
         .ocjena-2 { background: #fdebd0; color: #a04000; }
         .ocjena-1 { background: #fadbd8; color: #922b21; }
 
-        .status-badge {
-            display: inline-block; padding: 4px 10px;
-            border-radius: 20px; font-size: 12px; font-weight: 500;
-        }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
         .status-opravdan   { background: #d5f5e3; color: #1e8449; }
         .status-neopravdan { background: #fadbd8; color: #922b21; }
         .status-na_cekanju { background: #fef9e7; color: #9a7d0a; }
@@ -176,56 +137,41 @@
 
         .razredni-badge {
             background: #d6eaf8; color: #1a5276;
-            padding: 3px 8px; border-radius: 4px;
-            font-size: 11px; font-weight: 500; margin-left: 8px;
-        }
-
-        /* Kaskadni filter */
-        .filter-bar {
-            background: var(--white);
-            border: 1px solid #e8e4dc;
-            border-radius: 8px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            align-items: end;
-        }
-        .filter-bar .form-group label { color: var(--accent); }
-
-        .divider {
-            border: none; border-top: 1px solid #e8e4dc;
-            margin: 20px 0;
+            padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-left: 8px;
         }
 
         .info-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #f0f7ff;
-            color: #1a5276;
-            border: 1px solid #d6eaf8;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #f0f7ff; color: #1a5276; border: 1px solid #d6eaf8;
+            padding: 6px 12px; border-radius: 20px; font-size: 13px;
         }
 
-        /* Vladanje */
-        .vladanje-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
+        /* Raspored */
+        .raspored-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 8px;
         }
+        .dan-header {
+            background: var(--navy); color: white; text-align: center;
+            padding: 10px; border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 500;
+        }
+        .cas-slot {
+            background: var(--white); border: 1px solid #e8e4dc;
+            border-top: none; padding: 10px 12px; font-size: 13px;
+        }
+        .cas-slot:last-child { border-radius: 0 0 6px 6px; }
+        .cas-slot .cas-broj  { color: #aaa; font-size: 11px; margin-bottom: 2px; }
+        .cas-slot .cas-predmet { font-weight: 500; color: var(--navy); }
+        .cas-slot .cas-info  { color: #888; font-size: 11px; }
+        .cas-slot.prazan     { color: #ccc; text-align: center; font-size: 12px; }
+
+        /* Vladanje */
+        .vladanje-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <nav class="navbar">
-    <div class="navbar-logo">
-        📖 E-Dnevnik <span>Profesor</span>
-    </div>
+    <div class="navbar-logo">📖 E-Dnevnik <span>Profesor</span></div>
     <div class="navbar-user">
         <span id="navIme">...</span>
         <span id="navRazredni" class="razredni-badge" style="display:none">Razredni starješina</span>
@@ -236,8 +182,9 @@
 <div class="tabs">
     <div class="tab active" onclick="switchTab('ocjene', this)">✏️ Upiši ocjenu</div>
     <div class="tab" onclick="switchTab('izostanci', this)">📅 Bilježi izostanak</div>
+    <div class="tab" onclick="switchTab('raspored', this)">🗓 Moj raspored</div>
     <div class="tab" id="tabPravdanje" style="display:none" onclick="switchTab('pravdanje', this)">✅ Pravdanje izostanaka</div>
-    <div class="tab" id="tabVladanje" style="display:none" onclick="switchTab('vladanje', this)">📋 Vladanje</div>
+    <div class="tab" id="tabVladanje"  style="display:none" onclick="switchTab('vladanje', this)">📋 Vladanje</div>
 </div>
 
 <div class="main">
@@ -375,6 +322,17 @@
         </div>
     </div>
 
+    <!-- ===================== RASPORED ===================== -->
+    <div class="page" id="page-raspored">
+        <div class="page-header">
+            <h1>Moj raspored</h1>
+            <p>Pregled tvojih časova za ovu sedmicu</p>
+        </div>
+        <div id="rasporedProfSadrzaj">
+            <p class="loading">Učitavanje...</p>
+        </div>
+    </div>
+
     <!-- ===================== PRAVDANJE (samo razredni) ===================== -->
     <div class="page" id="page-pravdanje">
         <div class="page-header">
@@ -482,7 +440,6 @@
 
     let profInfo = {};
 
-    // ─── INIT ───────────────────────────────────────────────
     async function init() {
         await provjeriRazrednog();
         await ucitajRazredeZaProfesora();
@@ -490,13 +447,12 @@
 
     async function provjeriRazrednog() {
         try {
-            const res  = await fetch(`/api/profesor/${korisnik.id}/info`);
-            profInfo   = await res.json();
+            const res = await fetch(`/api/profesor/${korisnik.id}/info`);
+            profInfo  = await res.json();
             if (profInfo.je_razredni) {
                 document.getElementById('tabPravdanje').style.display = 'block';
                 document.getElementById('tabVladanje').style.display  = 'block';
                 document.getElementById('navRazredni').style.display  = 'inline-flex';
-                // Učitaj učenike razreda za vladanje
                 ucitajUcenikeRazreda(profInfo.razred_id);
                 ucitajVladanje();
             }
@@ -514,16 +470,14 @@
         } catch(e) { console.error(e); }
     }
 
-    // ─── KASKADNI DROPDOWNI ─────────────────────────────────
     async function ucitajPredmeteZaRazred(mode) {
-        const razredId = document.getElementById(mode === 'ocjena' ? 'selRazredOcjena' : 'selRazredIz').value;
+        const razredId   = document.getElementById(mode === 'ocjena' ? 'selRazredOcjena' : 'selRazredIz').value;
         const selPredmet = document.getElementById(mode === 'ocjena' ? 'selPredmetOcjena' : 'selPredmetIz');
 
-        // Reset
         selPredmet.innerHTML = '<option value="">— Učitavanje... —</option>';
         selPredmet.disabled  = true;
-        if (mode === 'ocjena') document.getElementById('cardUpisOcjene').style.display = 'none';
-        else document.getElementById('cardUpisIzostanka').style.display = 'none';
+        if (mode === 'ocjena') document.getElementById('cardUpisOcjene').style.display    = 'none';
+        else                   document.getElementById('cardUpisIzostanka').style.display = 'none';
 
         if (!razredId) {
             selPredmet.innerHTML = '<option value="">— Prvo odaberi razred —</option>';
@@ -533,28 +487,28 @@
         try {
             const res      = await fetch(`/api/profesor/${korisnik.id}/razred/${razredId}/predmeti`);
             const predmeti = await res.json();
-            const opts     = predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
-            selPredmet.innerHTML = '<option value="">— Odaberi predmet —</option>' + opts;
-            selPredmet.disabled  = false;
+            selPredmet.innerHTML = '<option value="">— Odaberi predmet —</option>' +
+                predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
+            selPredmet.disabled = false;
         } catch(e) {
             selPredmet.innerHTML = '<option value="">Greška pri učitavanju</option>';
         }
     }
 
     async function ucitajUcenikeZaRazred(mode) {
-        const razredId   = document.getElementById(mode === 'ocjena' ? 'selRazredOcjena' : 'selRazredIz').value;
-        const predmetId  = document.getElementById(mode === 'ocjena' ? 'selPredmetOcjena' : 'selPredmetIz').value;
-        const selUcenik  = document.getElementById(mode === 'ocjena' ? 'selUcenik' : 'selUcenikIz');
-        const card       = document.getElementById(mode === 'ocjena' ? 'cardUpisOcjene' : 'cardUpisIzostanka');
+        const razredId  = document.getElementById(mode === 'ocjena' ? 'selRazredOcjena' : 'selRazredIz').value;
+        const predmetId = document.getElementById(mode === 'ocjena' ? 'selPredmetOcjena' : 'selPredmetIz').value;
+        const selUcenik = document.getElementById(mode === 'ocjena' ? 'selUcenik' : 'selUcenikIz');
+        const card      = document.getElementById(mode === 'ocjena' ? 'cardUpisOcjene' : 'cardUpisIzostanka');
 
         if (!predmetId) { card.style.display = 'none'; return; }
 
         try {
             const res     = await fetch(`/api/razred/${razredId}/ucenici`);
             const ucenici = await res.json();
-            const opts    = ucenici.map(u => `<option value="${u.id}">${u.prezime} ${u.ime}</option>`).join('');
-            selUcenik.innerHTML = '<option value="">— Odaberi učenika —</option>' + opts;
-            card.style.display  = 'block';
+            selUcenik.innerHTML = '<option value="">— Odaberi učenika —</option>' +
+                ucenici.map(u => `<option value="${u.id}">${u.prezime} ${u.ime}</option>`).join('');
+            card.style.display = 'block';
         } catch(e) { console.error(e); }
     }
 
@@ -562,12 +516,12 @@
         try {
             const res     = await fetch(`/api/razred/${razredId}/ucenici`);
             const ucenici = await res.json();
-            const opts    = ucenici.map(u => `<option value="${u.id}">${u.prezime} ${u.ime}</option>`).join('');
-            document.getElementById('selUcenikVladanje').innerHTML = '<option value="">— Odaberi učenika —</option>' + opts;
+            document.getElementById('selUcenikVladanje').innerHTML =
+                '<option value="">— Odaberi učenika —</option>' +
+                ucenici.map(u => `<option value="${u.id}">${u.prezime} ${u.ime}</option>`).join('');
         } catch(e) { console.error(e); }
     }
 
-    // ─── TABS ────────────────────────────────────────────────
     function switchTab(tab, el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -575,6 +529,48 @@
         document.getElementById('page-' + tab).classList.add('active');
         if (tab === 'pravdanje') ucitajPravdanje();
         if (tab === 'vladanje')  ucitajVladanje();
+        if (tab === 'raspored')  ucitajRasporedProfesora();
+    }
+
+    // ─── RASPORED PROFESORA ──────────────────────────────────
+    async function ucitajRasporedProfesora() {
+        const el = document.getElementById('rasporedProfSadrzaj');
+        try {
+            const res    = await fetch(`/api/profesor/${korisnik.id}/raspored`);
+            const casovi = await res.json();
+
+            if (!casovi.length) {
+                el.innerHTML = '<p class="empty">Nemate dodijeljenih časova u rasporedu.</p>';
+                return;
+            }
+
+            const dani   = ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak'];
+            const maxCas = Math.max(...casovi.map(c => c.cas_broj));
+
+            let html = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">';
+            dani.forEach(dan => {
+                const casoviDana = casovi.filter(c => c.dan === dan);
+                html += `<div>
+                    <div style="background:var(--navy);color:white;text-align:center;padding:10px;border-radius:6px 6px 0 0;font-size:13px;font-weight:500">${dan}</div>`;
+                for (let i = 1; i <= maxCas; i++) {
+                    const cas = casoviDana.find(c => c.cas_broj === i);
+                    if (cas) {
+                        html += `<div style="background:white;border:1px solid #e8e4dc;border-top:none;padding:10px 12px;font-size:13px${i === maxCas ? ';border-radius:0 0 6px 6px' : ''}">
+                            <div style="color:#aaa;font-size:11px;margin-bottom:2px">${i}. čas${cas.vrijeme_od ? ` · ${cas.vrijeme_od}` : ''}</div>
+                            <div style="font-weight:500">${cas.predmet}</div>
+                            <div style="color:#888;font-size:11px">${cas.razred}</div>
+                        </div>`;
+                    } else {
+                        html += `<div style="background:white;border:1px solid #e8e4dc;border-top:none;padding:10px 12px;color:#ccc;text-align:center;font-size:12px${i === maxCas ? ';border-radius:0 0 6px 6px' : ''}">${i}. —</div>`;
+                    }
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+            el.innerHTML = html;
+        } catch(e) {
+            el.innerHTML = '<p class="empty">Greška pri učitavanju rasporeda.</p>';
+        }
     }
 
     // ─── UPIŠI OCJENU ────────────────────────────────────────
@@ -610,7 +606,7 @@
             if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
             else {
                 prikaziAlert(alertEl, 'success', '✅ Ocjena uspješno upisana!');
-                document.getElementById('selOcjena').value    = '';
+                document.getElementById('selOcjena').value     = '';
                 document.getElementById('inputKomentar').value = '';
             }
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
@@ -650,9 +646,9 @@
     // ─── PRAVDANJE ───────────────────────────────────────────
     async function ucitajPravdanje() {
         try {
-            const res = await fetch(`/api/profesor/${korisnik.id}/izostanci`);
+            const res       = await fetch(`/api/profesor/${korisnik.id}/izostanci`);
             const izostanci = await res.json();
-            const tb = document.getElementById('tabelaPravdanje');
+            const tb        = document.getElementById('tabelaPravdanje');
 
             if (!izostanci.length) {
                 tb.innerHTML = '<tr><td colspan="6" class="empty">Nema izostanaka na čekanju. 🎉</td></tr>';
