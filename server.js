@@ -42,9 +42,11 @@ app.post('/api/login', (req, res) => {
         if (rezultati.length === 0) return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
 
         const korisnik = rezultati[0];
-        const poklapanje = await bcrypt.compare(lozinka, korisnik.lozinka_hash);
+       const poklapanje = lozinka === korisnik.lozinka_hash;
 
-        if (!poklapanje) return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
+if (!poklapanje) {
+    return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
+}
 
         // Vraćamo osnovne podatke (bez lozinke!)
         res.json({
