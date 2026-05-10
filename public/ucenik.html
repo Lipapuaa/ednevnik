@@ -19,285 +19,141 @@
             --grey:   #f8f7f4;
         }
 
-        body {
-            background: var(--grey);
-            font-family: 'DM Sans', sans-serif;
-            color: var(--navy);
-            min-height: 100vh;
-        }
+        body { background: var(--grey); font-family: 'DM Sans', sans-serif; color: var(--navy); min-height: 100vh; }
 
-        /* NAVBAR */
         .navbar {
-            background: var(--navy);
-            padding: 0 40px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            background: var(--navy); padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
         .navbar-logo {
-            font-family: 'DM Serif Display', serif;
-            color: var(--white);
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-family: 'DM Serif Display', serif; color: var(--white);
+            font-size: 20px; display: flex; align-items: center; gap: 10px;
         }
-
         .navbar-logo span {
-            background: var(--accent);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 14px;
+            background: var(--accent); border-radius: 6px;
+            padding: 4px 8px; font-size: 14px;
         }
-
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            color: rgba(255,255,255,0.7);
-            font-size: 14px;
-        }
-
+        .navbar-user { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.7); font-size: 14px; }
         .btn-logout {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            transition: background 0.2s;
+            background: rgba(255,255,255,0.1); color: white; border: none;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; transition: background 0.2s;
         }
-
         .btn-logout:hover { background: rgba(255,255,255,0.2); }
 
-        /* TABS */
         .tabs {
-            background: var(--white);
-            border-bottom: 1px solid #e8e4dc;
-            padding: 0 40px;
-            display: flex;
-            gap: 0;
+            background: var(--white); border-bottom: 1px solid #e8e4dc;
+            padding: 0 40px; display: flex; gap: 0;
         }
-
         .tab {
-            padding: 18px 24px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: #888;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            user-select: none;
+            padding: 18px 24px; cursor: pointer; font-size: 14px; font-weight: 500;
+            color: #888; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none;
         }
-
         .tab:hover { color: var(--navy); }
+        .tab.active { color: var(--navy); border-bottom-color: var(--accent); }
 
-        .tab.active {
-            color: var(--navy);
-            border-bottom-color: var(--accent);
-        }
-
-        /* MAIN */
-        .main {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
+        .main { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
         .page { display: none; }
         .page.active { display: block; }
 
-        /* HEADER */
-        .page-header {
-            margin-bottom: 28px;
-        }
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--navy); }
+        .page-header p { color: #888; font-size: 14px; margin-top: 4px; font-weight: 300; }
 
-        .page-header h1 {
-            font-family: 'DM Serif Display', serif;
-            font-size: 32px;
-            color: var(--navy);
-        }
-
-        .page-header p {
-            color: #888;
-            font-size: 14px;
-            margin-top: 4px;
-            font-weight: 300;
-        }
-
-        /* STATS KARTICE */
         .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 32px;
         }
-
-        .stat-card {
-            background: var(--white);
-            border-radius: 8px;
-            padding: 24px;
-            border: 1px solid #e8e4dc;
-        }
-
+        .stat-card { background: var(--white); border-radius: 8px; padding: 24px; border: 1px solid #e8e4dc; }
         .stat-card .label {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #aaa;
-            margin-bottom: 8px;
+            font-size: 11px; font-weight: 500; letter-spacing: 1px;
+            text-transform: uppercase; color: #aaa; margin-bottom: 8px;
         }
-
-        .stat-card .value {
-            font-family: 'DM Serif Display', serif;
-            font-size: 36px;
-            color: var(--navy);
-            line-height: 1;
-        }
-
+        .stat-card .value { font-family: 'DM Serif Display', serif; font-size: 36px; color: var(--navy); line-height: 1; }
         .stat-card .value.accent { color: var(--accent); }
         .stat-card .value.green  { color: var(--green); }
         .stat-card .value.red    { color: var(--red); }
 
-        /* PREDMETI TABELA */
-        .card {
-            background: var(--white);
-            border-radius: 8px;
-            border: 1px solid #e8e4dc;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
+        .card { background: var(--white); border-radius: 8px; border: 1px solid #e8e4dc; overflow: hidden; margin-bottom: 20px; }
         .card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e8e4dc;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 20px 24px; border-bottom: 1px solid #e8e4dc;
+            display: flex; align-items: center; justify-content: space-between;
         }
+        .card-header h3 { font-family: 'DM Serif Display', serif; font-size: 18px; }
 
-        .card-header h3 {
-            font-family: 'DM Serif Display', serif;
-            font-size: 18px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
+        table { width: 100%; border-collapse: collapse; }
         th {
-            padding: 12px 24px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #aaa;
-            background: #fafaf8;
-            border-bottom: 1px solid #e8e4dc;
+            padding: 12px 24px; text-align: left; font-size: 11px; font-weight: 500;
+            letter-spacing: 1px; text-transform: uppercase; color: #aaa;
+            background: #fafaf8; border-bottom: 1px solid #e8e4dc;
         }
-
-        td {
-            padding: 14px 24px;
-            font-size: 14px;
-            border-bottom: 1px solid #f0ece4;
-            vertical-align: middle;
-        }
-
+        td { padding: 14px 24px; font-size: 14px; border-bottom: 1px solid #f0ece4; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #fafaf8; }
 
         .ocjena-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 15px;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 6px; font-weight: 500; font-size: 15px;
         }
-
         .ocjena-5 { background: #d5f5e3; color: #1e8449; }
         .ocjena-4 { background: #d6eaf8; color: #1a5276; }
         .ocjena-3 { background: #fef9e7; color: #9a7d0a; }
         .ocjena-2 { background: #fdebd0; color: #a04000; }
         .ocjena-1 { background: #fadbd8; color: #922b21; }
 
-        .prosjek-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .prosjek-bar { display: flex; align-items: center; gap: 12px; }
+        .bar-track { flex: 1; height: 6px; background: #e8e4dc; border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.8s ease; }
 
-        .bar-track {
-            flex: 1;
-            height: 6px;
-            background: #e8e4dc;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            background: var(--accent);
-            transition: width 0.8s ease;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
         .status-opravdan   { background: #d5f5e3; color: #1e8449; }
         .status-neopravdan { background: #fadbd8; color: #922b21; }
         .status-na_cekanju { background: #fef9e7; color: #9a7d0a; }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #aaa;
-            font-size: 14px;
-        }
+        .empty, .loading { text-align: center; padding: 40px; color: #bbb; font-size: 14px; }
 
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #bbb;
-            font-size: 14px;
+        /* Raspored tabela */
+        .raspored-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 8px;
         }
+        .dan-kolona { }
+        .dan-header {
+            background: var(--navy); color: white;
+            text-align: center; padding: 10px;
+            border-radius: 6px 6px 0 0;
+            font-size: 13px; font-weight: 500;
+        }
+        .cas-slot {
+            background: var(--white); border: 1px solid #e8e4dc;
+            border-top: none; padding: 10px 12px;
+            font-size: 13px;
+        }
+        .cas-slot:last-child { border-radius: 0 0 6px 6px; }
+        .cas-slot .cas-broj { color: #aaa; font-size: 11px; margin-bottom: 2px; }
+        .cas-slot .cas-predmet { font-weight: 500; color: var(--navy); }
+        .cas-slot .cas-info { color: #888; font-size: 11px; }
+        .cas-slot.prazan { color: #ccc; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
-    <div class="navbar-logo">
-        📖 E-Dnevnik <span>Učenik</span>
-    </div>
+    <div class="navbar-logo">📖 E-Dnevnik <span id="navRazred">Učenik</span></div>
     <div class="navbar-user">
         <span id="navIme">...</span>
         <button class="btn-logout" onclick="odjava()">Odjavi se</button>
     </div>
 </nav>
 
-<!-- TABS -->
 <div class="tabs">
     <div class="tab active" onclick="switchTab('ocjene', this)">📊 Ocjene</div>
+    <div class="tab" onclick="switchTab('raspored', this)">🗓 Raspored</div>
     <div class="tab" onclick="switchTab('izostanci', this)">📅 Izostanci</div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
     <!-- OCJENE PAGE -->
@@ -340,26 +196,16 @@
                 </tbody>
             </table>
         </div>
+    </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3>Sve ocjene</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Predmet</th>
-                        <th>Ocjena</th>
-                        <th>Tip</th>
-                        <th>Datum</th>
-                        <th>Profesor</th>
-                        <th>Komentar</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaOcjene">
-                    <tr><td colspan="6" class="loading">Učitavanje...</td></tr>
-                </tbody>
-            </table>
+    <!-- RASPORED PAGE -->
+    <div class="page" id="page-raspored">
+        <div class="page-header">
+            <h1>Moj raspored</h1>
+            <p>Sedmični raspored časova</p>
+        </div>
+        <div id="rasporedSadrzaj">
+            <p class="loading">Učitavanje...</p>
         </div>
     </div>
 
@@ -413,15 +259,11 @@
 </div>
 
 <script>
-    // Provjeri je li korisnik ulogovan
     const korisnik = JSON.parse(sessionStorage.getItem('korisnik') || 'null');
-    if (!korisnik || korisnik.uloga !== 'ucenik') {
-        window.location.href = '/';
-    }
+    if (!korisnik || korisnik.uloga !== 'ucenik') window.location.href = '/';
 
     document.getElementById('navIme').textContent = korisnik.ime + ' ' + korisnik.prezime;
 
-    // Učitaj podatke pri startu
     ucitajOcjene();
     ucitajIzostanke();
 
@@ -430,27 +272,24 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         el.classList.add('active');
         document.getElementById('page-' + tab).classList.add('active');
+        if (tab === 'raspored') ucitajRaspored();
     }
 
     async function ucitajOcjene() {
         try {
-            // Prosjeci
             const resP = await fetch(`/api/ucenik/${korisnik.id}/prosjeci`);
             const prosjeci = await resP.json();
 
-            // Sve ocjene
             const resO = await fetch(`/api/ucenik/${korisnik.id}/ocjene`);
             const ocjene = await resO.json();
 
-            // Stats
             if (prosjeci.length > 0) {
                 const ukupanProsjek = (prosjeci.reduce((s, p) => s + parseFloat(p.prosjek), 0) / prosjeci.length).toFixed(2);
-                document.getElementById('statProsjek').textContent = ukupanProsjek;
+                document.getElementById('statProsjek').textContent     = ukupanProsjek;
                 document.getElementById('statBrojPredmeta').textContent = prosjeci.length;
             }
             document.getElementById('statBrojOcjena').textContent = ocjene.length;
 
-            // Tabela prosjeci
             const tbP = document.getElementById('tabelaProsjeci');
             if (prosjeci.length === 0) {
                 tbP.innerHTML = '<tr><td colspan="4" class="empty">Nema ocjena.</td></tr>';
@@ -471,26 +310,46 @@
                     </tr>
                 `).join('');
             }
+        } catch (err) { console.error(err); }
+    }
 
-            // Tabela sve ocjene
-            const tbO = document.getElementById('tabelaOcjene');
-            if (ocjene.length === 0) {
-                tbO.innerHTML = '<tr><td colspan="6" class="empty">Nema ocjena.</td></tr>';
-            } else {
-                tbO.innerHTML = ocjene.map(o => `
-                    <tr>
-                        <td>${o.predmet}</td>
-                        <td><span class="ocjena-badge ocjena-${o.ocjena}">${o.ocjena}</span></td>
-                        <td style="color:#888;font-size:13px">${o.tip}</td>
-                        <td style="color:#888;font-size:13px">${new Date(o.datum).toLocaleDateString('bs-BA')}</td>
-                        <td style="font-size:13px">${o.profesor}</td>
-                        <td style="color:#aaa;font-size:13px">${o.komentar || '—'}</td>
-                    </tr>
-                `).join('');
+    async function ucitajRaspored() {
+        const el = document.getElementById('rasporedSadrzaj');
+        try {
+            const res = await fetch(`/api/ucenik/${korisnik.id}/raspored`);
+            const casovi = await res.json();
+
+            if (!casovi.length) {
+                el.innerHTML = '<p class="empty">Raspored još nije unesen.</p>';
+                return;
             }
 
-        } catch (err) {
-            console.error(err);
+            const dani = ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak'];
+            const maxCas = Math.max(...casovi.map(c => c.cas_broj));
+
+            let html = '<div class="raspored-grid">';
+            dani.forEach(dan => {
+                const casoviDana = casovi.filter(c => c.dan === dan);
+                html += `<div class="dan-kolona">
+                    <div class="dan-header">${dan}</div>`;
+                for (let i = 1; i <= maxCas; i++) {
+                    const cas = casoviDana.find(c => c.cas_broj === i);
+                    if (cas) {
+                        html += `<div class="cas-slot">
+                            <div class="cas-broj">${i}. čas${cas.vrijeme_od ? ` · ${cas.vrijeme_od}` : ''}</div>
+                            <div class="cas-predmet">${cas.predmet}</div>
+                            <div class="cas-info">${cas.profesor}</div>
+                        </div>`;
+                    } else {
+                        html += `<div class="cas-slot prazan">${i}. —</div>`;
+                    }
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+            el.innerHTML = html;
+        } catch(e) {
+            el.innerHTML = '<p class="empty">Greška pri učitavanju rasporeda.</p>';
         }
     }
 
@@ -499,7 +358,6 @@
             const res = await fetch(`/api/ucenik/${korisnik.id}/izostanci`);
             const izostanci = await res.json();
 
-            // Stats
             document.getElementById('statUkupno').textContent     = izostanci.length;
             document.getElementById('statOpravdani').textContent   = izostanci.filter(i => i.status === 'opravdan').length;
             document.getElementById('statNeopravdani').textContent = izostanci.filter(i => i.status === 'neopravdan').length;
@@ -519,10 +377,7 @@
                     </tr>
                 `).join('');
             }
-
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (err) { console.error(err); }
     }
 
     function statusLabel(s) {
@@ -536,6 +391,5 @@
         window.location.href = '/';
     }
 </script>
-
 </body>
 </html>
