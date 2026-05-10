@@ -830,20 +830,4 @@ app.delete('/api/admin/predmet/:id', (req, res) => {
 });
 
 // ─── POKRETANJE (ostaje isto) ─────────────────────────────────
-
-// ─── ADMIN: profesori za dodjelu (vraca profesor.id, ne korisnik.id) ────────
-app.get('/api/admin/profesori', (req, res) => {
-    const sql = `
-        SELECT p.id AS profesor_id, k.ime, k.prezime
-        FROM profesori p
-        JOIN korisnici k ON k.id = p.korisnik_id
-        WHERE k.aktivan = 1
-        ORDER BY k.prezime
-    `;
-    db.query(sql, (err, rezultati) => {
-        if (err) return res.status(500).json({ greska: 'Greška.' });
-        res.json(rezultati);
-    });
-});
-
 app.listen(PORT, () => console.log(`✅ Server pokrenut na http://localhost:${PORT}`));
