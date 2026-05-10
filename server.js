@@ -11,21 +11,11 @@ app.use(express.static('public')); // HTML/CSS/JS fajlovi idu u /public folder
 // ============================================================
 //  SPAJANJE NA BAZU
 // ============================================================
-
-   const db = mysql.createConnection({
-    host: 'mainline.proxy.rlwy.net',
-    user: 'root',
-    password: 'sNHyHZpdIVwAtynkUNWpBDZUXPlwniUS',
-    database: 'railway',
-    port: 36927
-});
-
-db.connect((err) => {
-    if (err) {
-        console.log("GRESKA:", err);
-    } else {
-        console.log("Spojeno na Railway bazu");
-    }
+const db = mysql.createConnection({
+    host:     'localhost',
+    user:     'root',
+    password: 'root',        // <- upiši svoju MySQL lozinku ako imaš
+    database: 'ednevnik'
 });
 
 db.connect((err) => {
@@ -52,11 +42,9 @@ app.post('/api/login', (req, res) => {
         if (rezultati.length === 0) return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
 
         const korisnik = rezultati[0];
-       const poklapanje = lozinka === korisnik.lozinka_hash;
+        const poklapanje = await bcrypt.compare(lozinka, korisnik.lozinka_hash);
 
-if (!poklapanje) {
-    return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
-}
+        if (!poklapanje) return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
 
         // Vraćamo osnovne podatke (bez lozinke!)
         res.json({
@@ -842,4 +830,20 @@ app.delete('/api/admin/predmet/:id', (req, res) => {
 });
 
 // ─── POKRETANJE (ostaje isto) ─────────────────────────────────
+
+// ─── ADMIN: profesori za dodjelu (vraca profesor.id, ne korisnik.id) ────────
+app.get('/api/admin/profesori', (req, res) => {
+    const sql = `
+        SELECT p.id AS profesor_id, k.ime, k.prezime
+        FROM profesori p
+        JOIN korisnici k ON k.id = p.korisnik_id
+        WHERE k.aktivan = 1
+        ORDER BY k.prezime
+    `;
+    db.query(sql, (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
 app.listen(PORT, () => console.log(`✅ Server pokrenut na http://localhost:${PORT}`));
