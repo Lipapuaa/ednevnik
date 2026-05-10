@@ -12,10 +12,13 @@ app.use(express.static('public')); // HTML/CSS/JS fajlovi idu u /public folder
 //  SPAJANJE NA BAZU
 // ============================================================
 const db = mysql.createConnection({
-    host:     'mainline.proxy.rlwy.net',
-    user:     'root',
-    password: 'sNHyHZpdIVwAtynkUNWpBDZUXPlwniUS',        // <- upiši svoju MySQL lozinku ako imaš
-    database: 'railway'
+   const db = mysql.createConnection({
+    host: 'mainline.proxy.rlwy.net',
+    user: 'root',
+    password: 'sNHyHZpdIVwAtynkUNWpBDZUXPlwniUS',
+    database: 'railway',
+    port: 36927
+});
 });
 
 db.connect((err) => {
