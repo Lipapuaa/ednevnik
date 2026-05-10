@@ -602,7 +602,6 @@
     if (!korisnik || korisnik.uloga !== 'admin') window.location.href = '/';
     document.getElementById('navIme').textContent = korisnik.ime + ' ' + korisnik.prezime;
 
-    // ─── TABS ────────────────────────────────────────────────
     function switchTab(tab, el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -619,31 +618,26 @@
         if (actions[tab]) actions[tab]();
     }
 
-    // ─── INIT ────────────────────────────────────────────────
     async function init() {
         await ucitajStatistike();
         await ucitajPregled();
     }
 
-    // ─── STATISTIKE ──────────────────────────────────────────
     async function ucitajStatistike() {
         try {
             const res = await fetch('/api/admin/korisnici');
             const k   = await res.json();
             document.getElementById('statUcenika').textContent  = k.filter(x => x.uloga === 'ucenik').length;
             document.getElementById('statProfesora').textContent = k.filter(x => x.uloga === 'profesor').length;
-
             const rRes = await fetch('/api/admin/razredi');
             const r    = await rRes.json();
             document.getElementById('statRazreda').textContent  = r.length;
-
             const pRes = await fetch('/api/predmeti');
             const p    = await pRes.json();
             document.getElementById('statPredmeta').textContent = p.length;
         } catch(e) { console.error(e); }
     }
 
-    // ─── PREGLED ─────────────────────────────────────────────
     async function ucitajPregled() {
         try {
             const res = await fetch('/api/admin/korisnici');
@@ -661,7 +655,6 @@
         } catch(e) {}
     }
 
-    // ─── KORISNICI ───────────────────────────────────────────
     async function ucitajKorisnike() {
         const uloga = document.getElementById('filterUloga').value;
         try {
@@ -711,12 +704,10 @@
             ]);
             const korisnici = await kRes.json();
             const razredi   = await rRes.json();
-
             const profesori = korisnici.filter(k => k.uloga === 'profesor');
             document.getElementById('selProfesorRazredni').innerHTML =
                 '<option value="">— Odaberi profesora —</option>' +
                 profesori.map(p => `<option value="${p.id}">${p.ime} ${p.prezime}</option>`).join('');
-
             document.getElementById('selRazredRazredni').innerHTML =
                 '<option value="">— Odaberi razred —</option>' +
                 razredi.map(r => `<option value="${r.id}">${r.naziv} (${r.skolska_god})</option>`).join('');
@@ -727,11 +718,7 @@
         const korisnik_id = document.getElementById('selProfesorRazredni').value;
         const razred_id   = document.getElementById('selRazredRazredni').value;
         const alertEl     = document.getElementById('alertRazredni');
-
-        if (!korisnik_id || !razred_id) {
-            prikaziAlert(alertEl, 'error', 'Odaberi profesora i razred.');
-            return;
-        }
+        if (!korisnik_id || !razred_id) { prikaziAlert(alertEl, 'error', 'Odaberi profesora i razred.'); return; }
         try {
             const res = await fetch('/api/admin/razredni', {
                 method: 'POST',
@@ -760,7 +747,6 @@
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
     }
 
-    // ─── NOVI KORISNIK ───────────────────────────────────────
     function toggleUlogaPolja() {
         const uloga = document.getElementById('nkUloga').value;
         document.getElementById('polja-ucenik').style.display  = uloga === 'ucenik'   ? 'block' : 'none';
@@ -795,9 +781,7 @@
         const lozinka  = document.getElementById('nkLozinka').value;
         const uloga    = document.getElementById('nkUloga').value;
         const alertEl  = document.getElementById('alertNoviK');
-
         alertEl.classList.remove('show');
-
         if (!ime || !prezime || !email || !lozinka || !uloga) {
             prikaziAlert(alertEl, 'error', 'Molimo popunite sva obavezna polja.');
             return;
@@ -806,9 +790,7 @@
             prikaziAlert(alertEl, 'error', 'Lozinka mora imati najmanje 6 znakova.');
             return;
         }
-
         const payload = { ime, prezime, email, lozinka, uloga };
-
         if (uloga === 'ucenik') {
             payload.razred_id   = parseInt(document.getElementById('nkRazred').value) || null;
             payload.datum_upisa = document.getElementById('nkDatumUpisa').value || null;
@@ -817,7 +799,6 @@
             payload.je_razredni = document.getElementById('nkJeRazredni').checked ? 1 : 0;
             payload.razred_id   = payload.je_razredni ? (parseInt(document.getElementById('nkRazredProf').value) || null) : null;
         }
-
         try {
             const res  = await fetch('/api/admin/korisnik', {
                 method: 'POST',
@@ -829,7 +810,6 @@
                 prikaziAlert(alertEl, 'error', data.greska || 'Greška pri kreiranju.');
             } else {
                 prikaziAlert(alertEl, 'success', `✅ Korisnik ${ime} ${prezime} uspješno kreiran!`);
-                // Reset forme
                 ['nkIme','nkPrezime','nkEmail','nkLozinka'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('nkUloga').value = '';
                 document.getElementById('polja-ucenik').style.display  = 'none';
@@ -838,7 +818,6 @@
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
     }
 
-    // ─── RAZREDI ─────────────────────────────────────────────
     async function ucitajRazrede() {
         try {
             const res     = await fetch('/api/admin/razredi');
@@ -869,15 +848,10 @@
             });
             const data = await res.json();
             if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else {
-                prikaziAlert(alertEl, 'success', `✅ Razred ${naziv} kreiran!`);
-                document.getElementById('razredNaziv').value = '';
-                ucitajRazrede();
-            }
+            else { prikaziAlert(alertEl, 'success', `✅ Razred ${naziv} kreiran!`); document.getElementById('razredNaziv').value = ''; ucitajRazrede(); }
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
     }
 
-    // ─── PREDMETI ────────────────────────────────────────────
     async function ucitajPredmete() {
         try {
             const res      = await fetch('/api/predmeti');
@@ -916,22 +890,21 @@
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
     }
 
-    // ─── DODJELA PREDMETA ────────────────────────────────────
+    // ── DODJELA — OVO JE ISPRAVLJENO ─────────────────────────
     async function ucitajDodjelu() {
         try {
-            const [kRes, pRes, rRes, dRes] = await Promise.all([
-                fetch('/api/admin/korisnici'),
+            const [profRes, pRes, rRes, dRes] = await Promise.all([
+                fetch('/api/admin/profesori'),   // <-- ISPRAVKA
                 fetch('/api/predmeti'),
                 fetch('/api/admin/razredi'),
                 fetch('/api/admin/dodjele')
             ]);
-            const korisnici = await kRes.json();
+            const profesori = await profRes.json();
             const predmeti  = await pRes.json();
             const razredi   = await rRes.json();
             const dodjele   = await dRes.json();
 
-            const profesori = korisnici.filter(k => k.uloga === 'profesor');
-            document.getElementById('ddProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.profesor_id || p.id}">${p.ime} ${p.prezime}</option>`).join('');
+            document.getElementById('ddProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.profesor_id}">${p.ime} ${p.prezime}</option>`).join('');
             document.getElementById('ddPredmet').innerHTML  = '<option value="">— Odaberi predmet —</option>'  + predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
             document.getElementById('ddRazred').innerHTML   = '<option value="">— Odaberi razred —</option>'   + razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
 
@@ -952,7 +925,6 @@
         const predmet_id  = document.getElementById('ddPredmet').value;
         const razred_id   = document.getElementById('ddRazred').value;
         const alertEl     = document.getElementById('alertDodjela');
-
         if (!profesor_id || !predmet_id || !razred_id) {
             prikaziAlert(alertEl, 'error', 'Odaberi profesora, predmet i razred.');
             return;
@@ -973,7 +945,6 @@
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
     }
 
-    // ─── MODAL & BRISANJE ────────────────────────────────────
     let _brisiTip = null;
     let _brisiId  = null;
 
@@ -998,7 +969,6 @@
     async function izvrsiObrisanje() {
         if (!_brisiTip || !_brisiId) return;
         zatvoriModal();
-
         const urls = {
             korisnik: `/api/admin/korisnik/${_brisiId}`,
             razred:   `/api/admin/razred/${_brisiId}`,
@@ -1009,23 +979,17 @@
             razred:   () => { ucitajRazrede(); ucitajStatistike(); },
             predmet:  () => { ucitajPredmete(); ucitajStatistike(); },
         };
-
         try {
             const res = await fetch(urls[_brisiTip], { method: 'DELETE' });
             if (res.ok) osvjezi[_brisiTip]?.();
-            else {
-                const data = await res.json();
-                alert(data.greska || 'Greška pri brisanju.');
-            }
+            else { const data = await res.json(); alert(data.greska || 'Greška pri brisanju.'); }
         } catch(e) { alert('Greška pri spajanju na server.'); }
     }
 
-    // Zatvori modal klikom izvan
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
         if (e.target === document.getElementById('modalOverlay')) zatvoriModal();
     });
 
-    // ─── HELPER ──────────────────────────────────────────────
     function ulogaLabel(u) {
         if (u === 'admin')    return 'Admin';
         if (u === 'profesor') return 'Profesor';
