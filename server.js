@@ -12,10 +12,19 @@ app.use(express.static('public')); // HTML/CSS/JS fajlovi idu u /public folder
 //  SPAJANJE NA BAZU
 // ============================================================
 const db = mysql.createConnection({
-    host:     'localhost',
-    user:     'root',
-    password: 'root',        // <- upiši svoju MySQL lozinku ako imaš
-    database: 'ednevnik'
+    host: 'mainline.proxy.rlwy.net',
+    user: 'root',
+    password: 'sNHyHZpdIVwAtynkUNWpBDZUXPlwniUS',
+    database: 'railway',
+    port: 36927
+});
+
+db.connect((err) => {
+    if (err) {
+        console.log("GRESKA:", err);
+    } else {
+        console.log("Spojeno na Railway bazu");
+    }
 });
 
 db.connect((err) => {
