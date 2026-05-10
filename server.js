@@ -27,13 +27,6 @@ db.connect((err) => {
     }
 });
 
-db.connect((err) => {
-    if (err) {
-        console.error('Greška pri spajanju na bazu:', err.message);
-        return;
-    }
-    console.log('✅ Spojen na MySQL bazu!');
-});
 
 // ============================================================
 //  LOGIN
