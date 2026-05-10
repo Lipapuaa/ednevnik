@@ -593,6 +593,7 @@ app.get('/api/admin/dodjele', (req, res) => {
 });
 
 app.post('/api/admin/dodjela', (req, res) => {
+        console.log('DODJELA BODY:', req.body); 
     const { profesor_id, predmet_id, razred_id } = req.body;
     if (!profesor_id || !predmet_id || !razred_id)
         return res.status(400).json({ greska: 'Nedostaju polja.' });
