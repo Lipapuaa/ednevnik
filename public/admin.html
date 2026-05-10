@@ -608,78 +608,53 @@
     <!-- ===================== RASPORED ===================== -->
     <div class="page" id="page-raspored">
         <div class="page-header">
-            <h1>Raspored u010dasova</h1>
-            <p>Kreiraj i upravljau0161 rasporedom za sve razrede</p>
+            <h1>Raspored časova</h1>
+            <p>Odaberi razred, pa prevuci predmete u raspored</p>
         </div>
 
-        <div class="two-col">
+        <div id="alertRaspored" class="alert" style="margin-bottom:16px"></div>
+
+        <!-- Razred selector -->
+        <div class="card" style="margin-bottom:20px">
+            <div class="card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <label style="font-weight:500;font-size:14px;white-space:nowrap">Razred:</label>
+                <select id="rRazredSelect" onchange="promijeniRazredRaspored()" style="padding:10px 16px;font-size:14px;border:1px solid #e8e4dc;border-radius:6px;font-family:'DM Sans',sans-serif;background:white;min-width:160px">
+                    <option value="">— Odaberi razred —</option>
+                </select>
+                <span id="rasporedInfo" style="font-size:13px;color:#aaa;margin-left:auto"></span>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:start" id="rasporedLayout">
+
+            <!-- Grid raspored -->
             <div class="card">
-                <div class="card-header"><h3>Novi termin</h3></div>
-                <div class="card-body">
-                    <div id="alertRaspored" class="alert"></div>
-                    <div class="form-group">
-                        <label>Razred</label>
-                        <select id="rRazred"><option value="">&#8212; Odaberi razred &#8212;</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Predmet</label>
-                        <select id="rPredmet"><option value="">&#8212; Odaberi predmet &#8212;</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Profesor</label>
-                        <select id="rProfesor"><option value="">&#8212; Odaberi profesora &#8212;</option></select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Dan</label>
-                            <select id="rDan">
-                                <option value="Ponedjeljak">Ponedjeljak</option>
-                                <option value="Utorak">Utorak</option>
-                                <option value="Srijeda">Srijeda</option>
-                                <option value="Cetvru006Bak">&#268;etvrtak</option>
-                                <option value="Petak">Petak</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Broj u010dasa</label>
-                            <select id="rCas">
-                                <option value="1">1. u010das</option>
-                                <option value="2">2. u010das</option>
-                                <option value="3">3. u010das</option>
-                                <option value="4">4. u010das</option>
-                                <option value="5">5. u010das</option>
-                                <option value="6">6. u010das</option>
-                                <option value="7">7. u010das</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Vrijeme od (opciono)</label>
-                            <input type="time" id="rVrijemeOd">
-                        </div>
-                        <div class="form-group">
-                            <label>Vrijeme do (opciono)</label>
-                            <input type="time" id="rVrijemeDo">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="kreirajTermin()">&#10133; Dodaj termin</button>
+                <div class="card-header"><h3>Sedmični raspored</h3></div>
+                <div style="overflow-x:auto">
+                    <table id="rasporedGrid" style="width:100%;border-collapse:collapse;min-width:600px">
+                        <thead>
+                            <tr>
+                                <th style="padding:12px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;width:60px">Čas</th>
+                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Ponedjeljak</th>
+                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Utorak</th>
+                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Srijeda</th>
+                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Četvrtak</th>
+                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Petak</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rasporedGridBody"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3>Pregled rasporeda</h3>
-                    <select id="filterRazredRaspored" onchange="ucitajRaspored()" style="width:auto;padding:8px 12px;font-size:13px">
-                        <option value="">Svi razredi</option>
-                    </select>
+            <!-- Predmeti sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-header" style="padding:14px 16px"><h3 style="font-size:14px">Predmeti</h3></div>
+                    <div id="predmetiSidebar" style="padding:12px;min-height:200px">
+                        <p style="color:#aaa;font-size:13px;text-align:center;padding:20px 0">Odaberi razred</p>
+                    </div>
                 </div>
-                <table>
-                    <thead><tr><th>Razred</th><th>Dan</th><th>u010cas</th><th>Predmet</th><th>Profesor</th><th>Vrijeme</th><th></th></tr></thead>
-                    <tbody id="tabelaRaspored">
-                        <tr><td colspan="7" class="loading">Uu010ditavanje...</td></tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -716,7 +691,7 @@
             razredi:      () => ucitajRazrede(),
             predmeti:     () => ucitajPredmete(),
             dodjela:      () => ucitajDodjelu(),
-            raspored:     () => { ucitajRaspored(); ucitajSelektoreRaspored(); },
+            raspored:     () => ucitajSelektoreRaspored(),
         };
         if (actions[tab]) actions[tab]();
     }
@@ -1186,78 +1161,234 @@
     }
 
     // ─── RASPORED ────────────────────────────────────────────
+    // ─── RASPORED — drag & drop ──────────────────────────────
+    const DANI = ['Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'];
+    const CASOVI = [1,2,3,4,5,6,7];
+
+    let _rasporedPodaci = { razredi:[], dodjele:[], raspored:[], trenutniRazred:null };
+
     async function ucitajSelektoreRaspored() {
         try {
-            const [kRes, pRes, rRes] = await Promise.all([
-                fetch('/api/admin/korisnici'),
-                fetch('/api/predmeti'),
-                fetch('/api/admin/razredi')
+            const [rRes, dRes] = await Promise.all([
+                fetch('/api/admin/razredi'),
+                fetch('/api/admin/dodjele')
             ]);
-            const korisnici = await kRes.json();
-            const predmeti  = await pRes.json();
-            const razredi   = await rRes.json();
-            const profesori = korisnici.filter(k => k.uloga === 'profesor');
-            const razredOpts = razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
-            document.getElementById('rRazred').innerHTML = '<option value="">— Odaberi razred —</option>' + razredOpts;
-            document.getElementById('rPredmet').innerHTML = '<option value="">— Odaberi predmet —</option>' + predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
-            document.getElementById('rProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.id}">${p.ime} ${p.prezime}</option>`).join('');
-            document.getElementById('filterRazredRaspored').innerHTML = '<option value="">Svi razredi</option>' + razredOpts;
+            _rasporedPodaci.razredi  = await rRes.json();
+            _rasporedPodaci.dodjele  = await dRes.json();
+            const sel = document.getElementById('rRazredSelect');
+            sel.innerHTML = '<option value="">— Odaberi razred —</option>' +
+                _rasporedPodaci.razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
         } catch(e) {}
     }
 
     async function ucitajRaspored() {
-        const filter = document.getElementById('filterRazredRaspored');
-        const razredId = filter ? filter.value : '';
         try {
-            const res     = await fetch('/api/admin/raspored');
-            let lista     = await res.json();
-            if (razredId) lista = lista.filter(r => String(r.razred_id) === razredId || r.razred === document.getElementById('filterRazredRaspored').options[document.getElementById('filterRazredRaspored').selectedIndex].text);
-            const tb = document.getElementById('tabelaRaspored');
-            tb.innerHTML = lista.length
-                ? lista.map(r => `
-                    <tr>
-                        <td><strong>${r.razred}</strong></td>
-                        <td>${r.dan}</td>
-                        <td>${r.cas_broj}. cas</td>
-                        <td>${r.predmet}</td>
-                        <td style="font-size:13px;color:#888">${r.profesor}</td>
-                        <td style="font-size:12px;color:#aaa">${r.vrijeme_od ? r.vrijeme_od + '-' + r.vrijeme_do : '—'}</td>
-                        <td><button class="btn-delete" onclick="obrisiTermin(${r.id})">Obrisi</button></td>
-                    </tr>`).join('')
-                : '<tr><td colspan="7" class="empty">Nema unesenih termina.</td></tr>';
+            const res = await fetch('/api/admin/raspored');
+            _rasporedPodaci.raspored = await res.json();
+            if (_rasporedPodaci.trenutniRazred) renderGrid();
         } catch(e) {}
     }
 
-    async function kreirajTermin() {
-        const razred_id   = document.getElementById('rRazred').value;
-        const predmet_id  = document.getElementById('rPredmet').value;
-        const profesor_id = document.getElementById('rProfesor').value;
-        const dan         = document.getElementById('rDan').value;
-        const cas_broj    = document.getElementById('rCas').value;
-        const vrijeme_od  = document.getElementById('rVrijemeOd').value;
-        const vrijeme_do  = document.getElementById('rVrijemeDo').value;
-        const alertEl     = document.getElementById('alertRaspored');
-        if (!razred_id || !predmet_id || !profesor_id || !dan || !cas_broj) {
-            prikaziAlert(alertEl, 'error', 'Popuni sva obavezna polja.');
+    async function promijeniRazredRaspored() {
+        const razredId = document.getElementById('rRazredSelect').value;
+        _rasporedPodaci.trenutniRazred = razredId ? +razredId : null;
+        if (!razredId) {
+            document.getElementById('predmetiSidebar').innerHTML = '<p style="color:#aaa;font-size:13px;text-align:center;padding:20px 0">Odaberi razred</p>';
+            renderGrid();
             return;
         }
+        await ucitajRaspored();
+        renderSidebar();
+        renderGrid();
+    }
+
+    // Predmeti koji su dodijeljeni ovom razredu (iz tabele dodjele)
+    function predmetiZaRazred(razredId) {
+        return _rasporedPodaci.dodjele.filter(d => {
+            // dodjele imaju: profesor, predmet, razred (nazivi)
+            const razred = _rasporedPodaci.razredi.find(r => r.id === razredId);
+            return razred && d.razred === razred.naziv;
+        });
+    }
+
+    function renderSidebar() {
+        const razredId = _rasporedPodaci.trenutniRazred;
+        const sidebar  = document.getElementById('predmetiSidebar');
+        const predmeti = predmetiZaRazred(razredId);
+
+        if (!predmeti.length) {
+            sidebar.innerHTML = '<p style="color:#aaa;font-size:13px;text-align:center;padding:20px 0">Nema dodijeljenih predmeta.<br>Idi na "Dodjela predmeta".</p>';
+            return;
+        }
+
+        sidebar.innerHTML = `
+            <p style="font-size:11px;color:#aaa;margin-bottom:10px;letter-spacing:0.5px">Prevuci u raspored</p>
+            ${predmeti.map(d => `
+                <div class="sidebar-predmet" draggable="true"
+                    data-predmet="${encodeURIComponent(d.predmet)}"
+                    data-profesor="${encodeURIComponent(d.profesor)}"
+                    ondragstart="onDragStart(event)"
+                    style="background:#f4f0e8;border:1px solid #e8e4dc;border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:grab;font-size:13px;transition:all 0.15s">
+                    <div style="font-weight:500;color:#0f1b2d">${d.predmet}</div>
+                    <div style="font-size:11px;color:#aaa;margin-top:2px">${d.profesor}</div>
+                </div>
+            `).join('')}
+            <p style="font-size:11px;color:#ccc;margin-top:12px;text-align:center">Klikni ✕ na ćeliji da ukloniš</p>
+        `;
+
+        // Hover efekt
+        sidebar.querySelectorAll('.sidebar-predmet').forEach(el => {
+            el.addEventListener('mouseenter', () => el.style.background = '#e8e4dc');
+            el.addEventListener('mouseleave', () => el.style.background = '#f4f0e8');
+        });
+    }
+
+    function renderGrid() {
+        const razredId  = _rasporedPodaci.trenutniRazred;
+        const raspored  = _rasporedPodaci.raspored.filter(r => {
+            if (!razredId) return false;
+            const razred = _rasporedPodaci.razredi.find(rz => rz.id === razredId);
+            return razred && r.razred === razred.naziv;
+        });
+
+        const tbody = document.getElementById('rasporedGridBody');
+
+        if (!razredId) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#aaa;font-size:14px">Odaberi razred gore</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = CASOVI.map(cas => `
+            <tr>
+                <td style="padding:8px 16px;font-size:12px;font-weight:500;color:#aaa;border-bottom:1px solid #f0ece4;white-space:nowrap">${cas}. čas</td>
+                ${DANI.map(dan => {
+                    const termin = raspored.find(r => r.dan === dan && r.cas_broj === cas);
+                    if (termin) {
+                        return `<td style="padding:6px;border-bottom:1px solid #f0ece4;border-left:1px solid #f0ece4">
+                            <div style="background:#0f1b2d;color:white;border-radius:6px;padding:8px 10px;font-size:12px;position:relative;min-height:52px">
+                                <div style="font-weight:500;padding-right:18px">${termin.predmet}</div>
+                                <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px">${termin.profesor}</div>
+                                <button onclick="obrisiTermin(${termin.id})" style="position:absolute;top:4px;right:4px;background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px" title="Ukloni">✕</button>
+                            </div>
+                        </td>`;
+                    } else {
+                        return `<td class="grid-cell-empty" data-dan="${dan}" data-cas="${cas}"
+                            style="padding:6px;border-bottom:1px solid #f0ece4;border-left:1px solid #f0ece4;min-width:120px;min-height:64px"
+                            ondragover="onDragOver(event)"
+                            ondragleave="onDragLeave(event)"
+                            ondrop="onDrop(event)">
+                            <div style="height:52px;border:2px dashed #e8e4dc;border-radius:6px;display:flex;align-items:center;justify-content:center">
+                                <span style="font-size:11px;color:#ddd">+</span>
+                            </div>
+                        </td>`;
+                    }
+                }).join('')}
+            </tr>
+        `).join('');
+    }
+
+    // ─── DRAG & DROP ─────────────────────────────────────────
+    let _dragData = null;
+
+    function onDragStart(event) {
+        _dragData = {
+            predmet:  decodeURIComponent(event.currentTarget.dataset.predmet),
+            profesor: decodeURIComponent(event.currentTarget.dataset.profesor),
+        };
+        event.currentTarget.style.opacity = '0.5';
+        setTimeout(() => event.currentTarget.style.opacity = '1', 0);
+    }
+
+    function onDragOver(event) {
+        event.preventDefault();
+        const cell = event.currentTarget;
+        cell.querySelector('div').style.borderColor = '#e8a020';
+        cell.querySelector('div').style.background  = '#fffbf2';
+    }
+
+    function onDragLeave(event) {
+        const cell = event.currentTarget;
+        cell.querySelector('div').style.borderColor = '#e8e4dc';
+        cell.querySelector('div').style.background  = '';
+    }
+
+    async function onDrop(event) {
+        event.preventDefault();
+        const cell = event.currentTarget;
+        cell.querySelector('div').style.borderColor = '#e8e4dc';
+        cell.querySelector('div').style.background  = '';
+
+        if (!_dragData) return;
+
+        const dan     = cell.dataset.dan;
+        const cas     = +cell.dataset.cas;
+        const razredId = _rasporedPodaci.trenutniRazred;
+
+        // Pronađi dodjelu da dobijemo IDs
+        const razred  = _rasporedPodaci.razredi.find(r => r.id === razredId);
+        const dodjela = _rasporedPodaci.dodjele.find(d =>
+            d.predmet === _dragData.predmet && d.razred === razred.naziv
+        );
+
+        if (!dodjela) {
+            prikaziAlert(document.getElementById('alertRaspored'), 'error', 'Greška: dodjela nije pronađena.');
+            return;
+        }
+
+        // Trebamo IDs — dohvatimo ih preko dodjela
+        // GET /api/admin/dodjele vraća naziv, pa moramo ići kroz korisnici/predmeti
+        // Koristimo search endpoint-e
         try {
+            const [kRes, pRes] = await Promise.all([
+                fetch('/api/admin/korisnici'),
+                fetch('/api/predmeti')
+            ]);
+            const korisnici = await kRes.json();
+            const predmeti  = await pRes.json();
+
+            const predmet  = predmeti.find(p => p.naziv === dodjela.predmet);
+            const profesor = korisnici.find(k =>
+                k.uloga === 'profesor' &&
+                (k.ime + ' ' + k.prezime) === dodjela.profesor
+            );
+
+            if (!predmet || !profesor) {
+                prikaziAlert(document.getElementById('alertRaspored'), 'error', 'Greška: predmet ili profesor nisu pronađeni.');
+                return;
+            }
+
+            const profesor_id = profesor.profesor_id || profesor.id;
+
             const res = await fetch('/api/admin/raspored', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ razred_id: +razred_id, predmet_id: +predmet_id, profesor_id: +profesor_id, dan, cas_broj: +cas_broj, vrijeme_od: vrijeme_od||null, vrijeme_do: vrijeme_do||null })
+                body: JSON.stringify({
+                    razred_id:  razredId,
+                    predmet_id: predmet.id,
+                    profesor_id: profesor_id,
+                    dan,
+                    cas_broj: cas,
+                    vrijeme_od: null,
+                    vrijeme_do: null
+                })
             });
             const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else { prikaziAlert(alertEl, 'success', 'Termin dodan!'); ucitajRaspored(); }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greska.'); }
+            if (!res.ok) {
+                prikaziAlert(document.getElementById('alertRaspored'), 'error', data.greska);
+            } else {
+                await ucitajRaspored();
+            }
+        } catch(e) {
+            prikaziAlert(document.getElementById('alertRaspored'), 'error', 'Greška pri spajanju.');
+        }
+
+        _dragData = null;
     }
 
     async function obrisiTermin(id) {
-        if (!confirm('Obrisati ovaj termin?')) return;
         try {
             const res = await fetch(`/api/admin/raspored/${id}`, { method: 'DELETE' });
-            if (res.ok) ucitajRaspored();
+            if (res.ok) await ucitajRaspored();
         } catch(e) {}
     }
 
