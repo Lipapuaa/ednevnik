@@ -11,7 +11,7 @@ app.use(express.static('public')); // HTML/CSS/JS fajlovi idu u /public folder
 // ============================================================
 //  SPAJANJE NA BAZU
 // ============================================================
-const db = mysql.createConnection({
+
    const db = mysql.createConnection({
     host: 'mainline.proxy.rlwy.net',
     user: 'root',
@@ -19,6 +19,13 @@ const db = mysql.createConnection({
     database: 'railway',
     port: 36927
 });
+
+db.connect((err) => {
+    if (err) {
+        console.log("GRESKA:", err);
+    } else {
+        console.log("Spojeno na Railway bazu");
+    }
 });
 
 db.connect((err) => {
