@@ -451,12 +451,30 @@ app.post('/api/vladanje', (req, res) => {
 // ============================================================
 app.get('/api/admin/korisnici', (req, res) => {
     const sql = `
-        SELECT k.id, k.ime, k.prezime, k.email, k.uloga, k.aktivan, k.kreiran_datum,
-       pr.id AS profesor_id
-FROM korisnici k
-LEFT JOIN profesori pr ON pr.korisnik_id = k.id
-ORDER BY k.uloga, k.prezime
-    `;
+    SELECT
+        k.id,
+        k.ime,
+        k.prezime,
+        k.email,
+        k.uloga,
+        k.aktivan,
+        k.kreiran_datum,
+
+        pr.id AS profesor_id,
+
+        u.razred_id,
+        u.datum_upisa
+
+    FROM korisnici k
+
+    LEFT JOIN profesori pr
+        ON pr.korisnik_id = k.id
+
+    LEFT JOIN ucenici u
+        ON u.korisnik_id = k.id
+
+    ORDER BY k.uloga, k.prezime
+`;
     db.query(sql, (err, rezultati) => {
         if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
         res.json(rezultati);
