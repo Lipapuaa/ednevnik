@@ -286,12 +286,20 @@ app.put('/api/izostanak/:id/status', (req, res) => {
     if (!['opravdan', 'neopravdan'].includes(status))
         return res.status(400).json({ greska: 'Status mora biti opravdan ili neopravdan.' });
 
+    // Normalizuj opravdao_id — prihvati i korisnici.id i profesori.id
     db.query(
-        'UPDATE izostanci SET status = ?, razlog = ?, opravdao_id = ? WHERE id = ?',
-        [status, razlog || null, opravdao_id, req.params.id],
-        (err) => {
-            if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
-            res.json({ poruka: `Izostanak označen kao ${status}.` });
+        'SELECT id FROM profesori WHERE id = ? OR korisnik_id = ? LIMIT 1',
+        [opravdao_id, opravdao_id],
+        (errPr, prRows) => {
+            const stvarniOpravdaoId = prRows && prRows.length ? prRows[0].id : opravdao_id;
+            db.query(
+                'UPDATE izostanci SET status = ?, razlog = ?, opravdao_id = ? WHERE id = ?',
+                [status, razlog || null, stvarniOpravdaoId, req.params.id],
+                (err) => {
+                    if (err) return res.status(500).json({ greska: 'Greška na serveru: ' + err.message });
+                    res.json({ poruka: `Izostanak označen kao ${status}.` });
+                }
+            );
         }
     );
 });
