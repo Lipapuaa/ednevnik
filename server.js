@@ -523,14 +523,38 @@ app.put('/api/admin/korisnik/:id/status', (req, res) => {
 
 // ─── ADMIN: promijeni razred učenika ──────────────────────────
 app.put('/api/admin/ucenik/:id/razred', (req, res) => {
+
+    console.log("PARAMS:", req.params);
+    console.log("BODY:", req.body);
+
     const { razred_id } = req.body;
-    if (!razred_id) return res.status(400).json({ greska: 'Nedostaje razred_id.' });
+
+    if (!razred_id) {
+
+        return res.status(400).json({
+            greska: 'Nedostaje razred_id.'
+        });
+    }
+
     db.query(
         'UPDATE ucenici SET razred_id = ? WHERE korisnik_id = ?',
         [razred_id, req.params.id],
-        (err) => {
-            if (err) return res.status(500).json({ greska: 'Greška pri promjeni razreda.' });
-            res.json({ poruka: 'Razred učenika ažuriran.' });
+
+        (err, rezultat) => {
+
+            console.log("MYSQL GRESKA:", err);
+            console.log("MYSQL REZULTAT:", rezultat);
+
+            if (err) {
+
+                return res.status(500).json({
+                    greska: 'Greška pri promjeni razreda.'
+                });
+            }
+
+            res.json({
+                poruka: 'Razred učenika ažuriran.'
+            });
         }
     );
 });
