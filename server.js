@@ -144,7 +144,8 @@ app.get('/api/ucenik/:id/ocjene', (req, res) => {
         JOIN predmeti p   ON p.id = o.predmet_id
         JOIN profesori pr ON pr.id = o.profesor_id
         JOIN korisnici k  ON k.id = pr.korisnik_id
-        WHERE o.ucenik_id = ?
+        JOIN ucenici u    ON u.id = o.ucenik_id
+        WHERE u.korisnik_id = ?
         ORDER BY p.naziv, o.datum DESC
     `;
     db.query(sql, [req.params.id], (err, rezultati) => {
@@ -164,7 +165,8 @@ app.get('/api/ucenik/:id/prosjeci', (req, res) => {
             COUNT(o.id) AS broj_ocjena
         FROM ocjene o
         JOIN predmeti p ON p.id = o.predmet_id
-        WHERE o.ucenik_id = ?
+        JOIN ucenici u  ON u.id = o.ucenik_id
+        WHERE u.korisnik_id = ?
         GROUP BY p.id
         ORDER BY p.naziv
     `;
@@ -187,7 +189,8 @@ app.get('/api/ucenik/:id/izostanci', (req, res) => {
             p.naziv AS predmet
         FROM izostanci i
         JOIN predmeti p ON p.id = i.predmet_id
-        WHERE i.ucenik_id = ?
+        JOIN ucenici u  ON u.id = i.ucenik_id
+        WHERE u.korisnik_id = ?
         ORDER BY i.datum DESC
     `;
     db.query(sql, [req.params.id], (err, rezultati) => {
@@ -468,8 +471,9 @@ app.post('/api/vladanje', (req, res) => {
                         VALUES (?, ?, ?, ?, ?, ?)
                         ON DUPLICATE KEY UPDATE ocjena = VALUES(ocjena), biljeska = VALUES(biljeska), postavio_id = VALUES(postavio_id)
                     `;
+                    console.log('VLADANJE INSERT:', [ucenik_id, skolska_god, polugodiste, ocjena, biljeska || null, stvarniPostavioId]);
                     db.query(sql, [ucenik_id, skolska_god, polugodiste, ocjena, biljeska || null, stvarniPostavioId], (err2) => {
-                        if (err2) return res.status(500).json({ greska: 'Greška pri upisu vladanja: ' + err2.message });
+                        if (err2) { console.log('VLADANJE ERR:', err2); return res.status(500).json({ greska: 'Greška pri upisu vladanja: ' + err2.message }); }
                         res.json({ poruka: 'Vladanje upisano!' });
                     });
                 }
