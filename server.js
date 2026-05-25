@@ -31,12 +31,11 @@ const PORT = 3000;
 // ============================================================
 app.post('/api/login', (req, res) => {
     const { email, lozinka } = req.body;
-    if (!email || !lozinka)
-        return res.status(400).json({ greska: 'Email i lozinka su obavezni.' });
-    app.post('/api/login', (req, res) => {
-    const { email, lozinka } = req.body;
 
     console.log("BODY:", req.body);
+
+    if (!email || !lozinka)
+        return res.status(400).json({ greska: 'Email i lozinka su obavezni.' });
 
     db.query(
         'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
@@ -71,28 +70,13 @@ app.post('/api/login', (req, res) => {
 
             res.json({
                 id: korisnik.id,
-                email: korisnik.email
+                ime: korisnik.ime,
+                prezime: korisnik.prezime,
+                email: korisnik.email,
+                uloga: korisnik.uloga
             });
         }
     );
-});
-
-    db.query('SELECT * FROM korisnici WHERE email = ? AND aktivan = 1', [email], async (err, rezultati) => {
-        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
-        if (rezultati.length === 0) return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
-
-        const korisnik = rezultati[0];
-       const poklapanje = await bcrypt.compare(lozinka, korisnik.lozinka_hash);
-        if (!poklapanje) return res.status(401).json({ greska: 'Pogrešan email ili lozinka.' });
-
-        res.json({
-            id:      korisnik.id,
-            ime:     korisnik.ime,
-            prezime: korisnik.prezime,
-            email:   korisnik.email,
-            uloga:   korisnik.uloga
-        });
-    });
 });
 
 // ============================================================
