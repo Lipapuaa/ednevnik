@@ -1,3 +1,6 @@
+bash
+
+cat > /mnt/user-data/outputs/admin.html << 'ENDOFFILE'
 <!DOCTYPE html>
 <html lang="bs">
 <head>
@@ -222,6 +225,92 @@
             background: none; border: none; cursor: pointer;
             color: #aaa; font-size: 16px;
         }
+
+        /* ── RAZREDI KARTICE ────────────────────────────── */
+        .razredi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .razred-kartica {
+            background: var(--white);
+            border: 2px solid #e8e4dc;
+            border-radius: 10px;
+            padding: 24px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            position: relative;
+        }
+        .razred-kartica:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(232,160,32,0.15);
+            transform: translateY(-2px);
+        }
+        .razred-kartica.aktivan {
+            border-color: var(--navy);
+            background: var(--navy);
+            color: white;
+        }
+        .razred-kartica.aktivan .razred-k-naziv { color: white; }
+        .razred-kartica.aktivan .razred-k-god   { color: rgba(255,255,255,0.5); }
+        .razred-kartica.aktivan .razred-k-broj  { background: rgba(255,255,255,0.15); color: white; }
+        .razred-k-naziv {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px; color: var(--navy);
+            margin-bottom: 4px;
+        }
+        .razred-k-god {
+            font-size: 12px; color: #aaa; margin-bottom: 12px;
+        }
+        .razred-k-broj {
+            display: inline-block;
+            background: var(--grey);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px; font-weight: 500;
+            color: #666;
+        }
+        .razred-k-razredni {
+            font-size: 11px; color: #aaa; margin-top: 8px;
+        }
+        .razred-k-razredni strong { color: #888; }
+
+        /* Učenici panel */
+        .ucenici-panel {
+            background: var(--white);
+            border: 1px solid #e8e4dc;
+            border-radius: 8px;
+            overflow: hidden;
+            animation: slideDown 0.25s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .ucenici-panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e8e4dc;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--navy);
+            color: white;
+        }
+        .ucenici-panel-header h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 20px; color: white;
+        }
+        .ucenici-panel-header .zatvori-btn {
+            background: rgba(255,255,255,0.1);
+            border: none; color: white;
+            padding: 6px 12px; border-radius: 4px;
+            cursor: pointer; font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+        }
+        .ucenici-panel-header .zatvori-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .novi-razred-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     </style>
 </head>
 <body>
@@ -328,21 +417,21 @@
 
         <!-- Promjena razreda ucenik -->
         <div class="card">
-            <div class="card-header"><h3>Promijeni razred uu010denika</h3></div>
+            <div class="card-header"><h3>Promijeni razred učenika</h3></div>
             <div class="card-body">
                 <div id="alertPromjenaRazreda" class="alert"></div>
                 <div class="form-row" style="align-items:end">
                     <div class="form-group" style="margin-bottom:0">
-                        <label>Uu010denik</label>
-                        <select id="selUcenikRazred"><option value="">&#8212; Odaberi uu010denika &#8212;</option></select>
+                        <label>Učenik</label>
+                        <select id="selUcenikRazred"><option value="">— Odaberi učenika —</option></select>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
                         <label>Novi razred</label>
-                        <select id="selNoviRazred"><option value="">&#8212; Odaberi razred &#8212;</option></select>
+                        <select id="selNoviRazred"><option value="">— Odaberi razred —</option></select>
                     </div>
                 </div>
                 <div style="margin-top:16px">
-                    <button class="btn btn-primary" onclick="promijeniRazredUcenika()">&#x1F504; Promijeni razred</button>
+                    <button class="btn btn-primary" onclick="promijeniRazredUcenika()">🔄 Promijeni razred</button>
                 </div>
             </div>
         </div>
@@ -485,10 +574,19 @@
     <div class="page" id="page-razredi">
         <div class="page-header">
             <h1>Razredi</h1>
-            <p>Kreiraj i upravljaj razredima</p>
+            <p>Klikni na razred da vidiš učenike — kreiraj i upravljaj razredima</p>
         </div>
 
-        <div class="two-col">
+        <!-- Kartice razreda -->
+        <div class="razredi-grid" id="razredeGrid">
+            <div class="loading" style="grid-column:1/-1">Učitavanje...</div>
+        </div>
+
+        <!-- Panel učenika (prikazuje se ispod kartica) -->
+        <div id="ucenici-panel" style="display:none; margin-bottom:24px"></div>
+
+        <!-- Forma za novi razred + tabela -->
+        <div class="novi-razred-layout">
             <div class="card">
                 <div class="card-header"><h3>Novi razred</h3></div>
                 <div class="card-body">
@@ -506,13 +604,13 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><h3>Svi razredi</h3></div>
+                <div class="card-header"><h3>Svi razredi (tabela)</h3></div>
                 <table>
                     <thead>
                         <tr><th>Naziv</th><th>Škol. god.</th><th>Razredni</th><th></th></tr>
                     </thead>
                     <tbody id="tabelaRazredi">
-                        <tr><td colspan="3" class="loading">Učitavanje...</td></tr>
+                        <tr><td colspan="4" class="loading">Učitavanje...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -614,7 +712,6 @@
 
         <div id="alertRaspored" class="alert" style="margin-bottom:16px"></div>
 
-        <!-- Razred selector -->
         <div class="card" style="margin-bottom:20px">
             <div class="card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
                 <label style="font-weight:500;font-size:14px;white-space:nowrap">Razred:</label>
@@ -626,8 +723,6 @@
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:start" id="rasporedLayout">
-
-            <!-- Grid raspored -->
             <div class="card">
                 <div class="card-header"><h3>Sedmični raspored</h3></div>
                 <div style="overflow-x:auto">
@@ -647,7 +742,6 @@
                 </div>
             </div>
 
-            <!-- Predmeti sidebar -->
             <div>
                 <div class="card">
                     <div class="card-header" style="padding:14px 16px"><h3 style="font-size:14px">Predmeti</h3></div>
@@ -906,7 +1000,6 @@
                 prikaziAlert(alertEl, 'error', data.greska || 'Greška pri kreiranju.');
             } else {
                 prikaziAlert(alertEl, 'success', `✅ Korisnik ${ime} ${prezime} uspješno kreiran!`);
-                // Reset forme
                 ['nkIme','nkPrezime','nkEmail','nkLozinka'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('nkUloga').value = '';
                 document.getElementById('polja-ucenik').style.display  = 'none';
@@ -916,11 +1009,38 @@
     }
 
     // ─── RAZREDI ─────────────────────────────────────────────
+    let _sviKorisnici = [];
+    let _aktivniRazredId = null;
+
     async function ucitajRazrede() {
         try {
-            const res     = await fetch('/api/admin/razredi');
-            const razredi = await res.json();
-            const tb      = document.getElementById('tabelaRazredi');
+            const [rRes, kRes] = await Promise.all([
+                fetch('/api/admin/razredi'),
+                fetch('/api/admin/korisnici')
+            ]);
+            const razredi   = await rRes.json();
+            _sviKorisnici   = await kRes.json();
+
+            // Kartice
+            const grid = document.getElementById('razredeGrid');
+            if (!razredi.length) {
+                grid.innerHTML = '<div class="loading" style="grid-column:1/-1">Nema razreda. Kreiraj prvi razred ispod.</div>';
+            } else {
+                grid.innerHTML = razredi.map(r => {
+                    const brojUcenika = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id === r.id).length;
+                    return `
+                        <div class="razred-kartica" id="kartica-${r.id}" onclick="otvoriUcenike(${r.id}, '${r.naziv}', '${r.skolska_god}')">
+                            <div class="razred-k-naziv">${r.naziv}</div>
+                            <div class="razred-k-god">${r.skolska_god}</div>
+                            <div class="razred-k-broj">👤 ${brojUcenika} učenika</div>
+                            ${r.razredni ? `<div class="razred-k-razredni">Razredni: <strong>${r.razredni}</strong></div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Tabela ispod
+            const tb = document.getElementById('tabelaRazredi');
             tb.innerHTML = razredi.length
                 ? razredi.map(r => `
                     <tr>
@@ -930,6 +1050,101 @@
                         <td><button class="btn-delete" onclick="potvrdiObrisanje('razred', ${r.id}, '${r.naziv}')">🗑 Obriši</button></td>
                     </tr>`).join('')
                 : '<tr><td colspan="4" class="empty">Nema razreda.</td></tr>';
+
+        } catch(e) { console.error(e); }
+    }
+
+    function otvoriUcenike(razredId, naziv, god) {
+        const panel = document.getElementById('ucenici-panel');
+
+        // Ako je isti razred kliknut ponovo — zatvori
+        if (_aktivniRazredId === razredId) {
+            _aktivniRazredId = null;
+            panel.style.display = 'none';
+            document.querySelectorAll('.razred-kartica').forEach(k => k.classList.remove('aktivan'));
+            return;
+        }
+
+        _aktivniRazredId = razredId;
+
+        // Označi aktivnu karticu
+        document.querySelectorAll('.razred-kartica').forEach(k => k.classList.remove('aktivan'));
+        document.getElementById('kartica-' + razredId).classList.add('aktivan');
+
+        // Filtriraj učenike
+        const ucenici = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id === razredId);
+
+        panel.style.display = 'block';
+        panel.innerHTML = `
+            <div class="ucenici-panel">
+                <div class="ucenici-panel-header">
+                    <h3>🏫 Razred ${naziv} — ${god} &nbsp;·&nbsp; <span style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:300;color:rgba(255,255,255,0.6)">${ucenici.length} učenika</span></h3>
+                    <button class="zatvori-btn" onclick="zatvoriUcenike()">✕ Zatvori</button>
+                </div>
+                ${ucenici.length ? `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ime i prezime</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Datum upisa</th>
+                            <th>Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ucenici.map(u => `
+                            <tr>
+                                <td><strong>${u.ime} ${u.prezime}</strong></td>
+                                <td style="color:#888;font-size:13px">${u.email}</td>
+                                <td><span class="badge ${u.aktivan ? 'badge-aktivan' : 'badge-neaktivan'}">${u.aktivan ? 'Aktivan' : 'Neaktivan'}</span></td>
+                                <td style="color:#aaa;font-size:13px">${u.datum_upisa ? new Date(u.datum_upisa).toLocaleDateString('bs-BA') : '—'}</td>
+                                <td style="display:flex;gap:6px">
+                                    <button class="btn-edit" onclick="toggleAktivanRazred(${u.id}, ${u.aktivan}, ${razredId}, '${naziv}', '${god}')">
+                                        ${u.aktivan ? '🔒 Deaktiviraj' : '🔓 Aktiviraj'}
+                                    </button>
+                                    <button class="btn-delete" onclick="potvrdiObrisanje('korisnik', ${u.id}, '${u.ime} ${u.prezime}')">
+                                        🗑 Obriši
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ` : `
+                <div class="empty" style="padding:40px">
+                    Ovaj razred nema učenika. Dodaj učenike u tabu "Novi korisnik".
+                </div>
+                `}
+            </div>
+        `;
+
+        // Scroll na panel
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function zatvoriUcenike() {
+        _aktivniRazredId = null;
+        document.getElementById('ucenici-panel').style.display = 'none';
+        document.querySelectorAll('.razred-kartica').forEach(k => k.classList.remove('aktivan'));
+    }
+
+    // Wrapper koji osvježava panel razreda nakon akcije
+    async function toggleAktivanRazred(id, trenutni, razredId, naziv, god) {
+        const noviStatus = trenutni ? 0 : 1;
+        try {
+            await fetch(`/api/admin/korisnik/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ aktivan: noviStatus })
+            });
+            // Osvježi lokalne podatke i ponovo otvori panel
+            const kRes = await fetch('/api/admin/korisnici');
+            _sviKorisnici = await kRes.json();
+            _aktivniRazredId = null; // reset da otvoriUcenike ne zatvori
+            otvoriUcenike(razredId, naziv, god);
+            // Osvježi kartice
+            ucitajRazrede();
         } catch(e) {}
     }
 
@@ -1082,8 +1297,8 @@
             predmet:  `/api/admin/predmet/${_brisiId}`,
         };
         const osvjezi = {
-            korisnik: () => { ucitajKorisnike(); ucitajStatistike(); },
-            razred:   () => { ucitajRazrede(); ucitajStatistike(); },
+            korisnik: () => { ucitajKorisnike(); ucitajStatistike(); ucitajRazrede(); },
+            razred:   () => { ucitajRazrede(); ucitajStatistike(); zatvoriUcenike(); },
             predmet:  () => { ucitajPredmete(); ucitajStatistike(); },
         };
 
@@ -1097,7 +1312,6 @@
         } catch(e) { alert('Greška pri spajanju na server.'); }
     }
 
-    // Zatvori modal klikom izvan
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
         if (e.target === document.getElementById('modalOverlay')) zatvoriModal();
     });
@@ -1120,7 +1334,6 @@
         window.location.href = '/';
     }
 
-
     // ─── PROMJENA RAZREDA UCENIK ──────────────────────────────
     async function ucitajSelektorePromjenaRazreda() {
         try {
@@ -1132,7 +1345,7 @@
             const razredi   = await rRes.json();
             const ucenici   = korisnici.filter(k => k.uloga === 'ucenik');
             document.getElementById('selUcenikRazred').innerHTML =
-                '<option value="">— Odaberi ucenik —</option>' +
+                '<option value="">— Odaberi učenika —</option>' +
                 ucenici.map(u => `<option value="${u.id}">${u.ime} ${u.prezime}</option>`).join('');
             document.getElementById('selNoviRazred').innerHTML =
                 '<option value="">— Odaberi razred —</option>' +
@@ -1145,7 +1358,7 @@
         const razred_id   = document.getElementById('selNoviRazred').value;
         const alertEl     = document.getElementById('alertPromjenaRazreda');
         if (!korisnik_id || !razred_id) {
-            prikaziAlert(alertEl, 'error', 'Odaberi ucenika i razred.');
+            prikaziAlert(alertEl, 'error', 'Odaberi učenika i razred.');
             return;
         }
         try {
@@ -1156,12 +1369,11 @@
             });
             const data = await res.json();
             if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else prikaziAlert(alertEl, 'success', 'Razred ucenika uspjesno promijenjen!');
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greska.'); }
+            else prikaziAlert(alertEl, 'success', '✅ Razred učenika uspješno promijenjen!');
+        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
     }
 
     // ─── RASPORED ────────────────────────────────────────────
-    // ─── RASPORED — drag & drop ──────────────────────────────
     const DANI = ['Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'];
     const CASOVI = [1,2,3,4,5,6,7];
 
@@ -1202,10 +1414,8 @@
         renderGrid();
     }
 
-    // Predmeti koji su dodijeljeni ovom razredu (iz tabele dodjele)
     function predmetiZaRazred(razredId) {
         return _rasporedPodaci.dodjele.filter(d => {
-            // dodjele imaju: profesor, predmet, razred (nazivi)
             const razred = _rasporedPodaci.razredi.find(r => r.id === razredId);
             return razred && d.razred === razred.naziv;
         });
@@ -1236,7 +1446,6 @@
             <p style="font-size:11px;color:#ccc;margin-top:12px;text-align:center">Klikni ✕ na ćeliji da ukloniš</p>
         `;
 
-        // Hover efekt
         sidebar.querySelectorAll('.sidebar-predmet').forEach(el => {
             el.addEventListener('mouseenter', () => el.style.background = '#e8e4dc');
             el.addEventListener('mouseleave', () => el.style.background = '#f4f0e8');
@@ -1324,7 +1533,6 @@
         const cas     = +cell.dataset.cas;
         const razredId = _rasporedPodaci.trenutniRazred;
 
-        // Pronađi dodjelu da dobijemo IDs
         const razred  = _rasporedPodaci.razredi.find(r => r.id === razredId);
         const dodjela = _rasporedPodaci.dodjele.find(d =>
             d.predmet === _dragData.predmet && d.razred === razred.naziv
@@ -1335,9 +1543,6 @@
             return;
         }
 
-        // Trebamo IDs — dohvatimo ih preko dodjela
-        // GET /api/admin/dodjele vraća naziv, pa moramo ići kroz korisnici/predmeti
-        // Koristimo search endpoint-e
         try {
             const [kRes, pRes] = await Promise.all([
                 fetch('/api/admin/korisnici'),
@@ -1396,3 +1601,8 @@
 </script>
 </body>
 </html>
+ENDOFFILE
+echo "Done"
+Output
+
+Done
