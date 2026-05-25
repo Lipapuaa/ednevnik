@@ -233,14 +233,26 @@ app.post('/api/ocjena', (req, res) => {
     if (ocjena < 1 || ocjena > 5)
         return res.status(400).json({ greska: 'Ocjena mora biti između 1 i 5.' });
 
-    const sql = `
-        INSERT INTO ocjene (ucenik_id, predmet_id, profesor_id, ocjena, datum, tip, komentar)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    db.query(sql, [ucenik_id, predmet_id, profesor_id, ocjena, datum, tip || 'usmeni', komentar || null], (err, rezultat) => {
-        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
-        res.json({ poruka: 'Ocjena uspješno upisana!', id: rezultat.insertId });
-    });
+    // profesor_id može biti korisnici.id ili profesori.id — normalizuj na profesori.id
+    db.query(
+        'SELECT id FROM profesori WHERE id = ? OR korisnik_id = ? LIMIT 1',
+        [profesor_id, profesor_id],
+        (err, prRows) => {
+            if (err || prRows.length === 0)
+                return res.status(400).json({ greska: 'Profesor nije pronađen.' });
+
+            const stvarniProfesorId = prRows[0].id;
+
+            const sql = `
+                INSERT INTO ocjene (ucenik_id, predmet_id, profesor_id, ocjena, datum, tip, komentar)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+            db.query(sql, [ucenik_id, predmet_id, stvarniProfesorId, ocjena, datum, tip || 'usmeni', komentar || null], (err2, rezultat) => {
+                if (err2) return res.status(500).json({ greska: 'Greška na serveru: ' + err2.message });
+                res.json({ poruka: 'Ocjena uspješno upisana!', id: rezultat.insertId });
+            });
+        }
+    );
 });
 
 // ============================================================
