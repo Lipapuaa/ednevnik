@@ -41,6 +41,22 @@
         }
         .btn-logout:hover { background: rgba(255,255,255,0.2); }
 
+        .vladanje-bar {
+            background: var(--white); border-bottom: 1px solid #e8e4dc;
+            padding: 10px 40px; display: flex; align-items: center; gap: 12px;
+            font-size: 13px; color: #666;
+        }
+        .vladanje-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--navy); color: white;
+            padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+        }
+        .vladanje-badge.v5 { background: #27ae60; }
+        .vladanje-badge.v4 { background: #2980b9; }
+        .vladanje-badge.v3 { background: #e8a020; }
+        .vladanje-badge.v2 { background: #e67e22; }
+        .vladanje-badge.v1 { background: #c0392b; }
+
         .tabs {
             background: var(--white); border-bottom: 1px solid #e8e4dc;
             padding: 0 40px; display: flex; gap: 0;
@@ -152,6 +168,11 @@
     <div class="tab active" onclick="switchTab('ocjene', this)">📊 Ocjene</div>
     <div class="tab" onclick="switchTab('raspored', this)">🗓 Raspored</div>
     <div class="tab" onclick="switchTab('izostanci', this)">📅 Izostanci</div>
+</div>
+
+<div id="vladanjeBar" class="vladanje-bar" style="display:none">
+    <span>📋 Vladanje:</span>
+    <span id="vladanjeBadge" class="vladanje-badge"></span>
 </div>
 
 <div class="main">
@@ -266,6 +287,24 @@
 
     ucitajOcjene();
     ucitajIzostanke();
+    ucitajVladanje();
+
+    async function ucitajVladanje() {
+        try {
+            const res  = await fetch(`/api/ucenik/${korisnik.id}/vladanje`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || data.length === 0) return;
+            // Show latest entry
+            const v = data[data.length - 1];
+            const labels = { 1: 'Nije zadovoljilo', 2: 'Ne zadovoljava', 3: 'Zadovoljava', 4: 'Dobro', 5: 'Primjerno' };
+            const bar    = document.getElementById('vladanjeBar');
+            const badge  = document.getElementById('vladanjeBadge');
+            badge.textContent = `${v.ocjena} — ${labels[v.ocjena] || v.ocjena}  (${v.polugodiste}. polugodište)`;
+            badge.className   = `vladanje-badge v${v.ocjena}`;
+            bar.style.display = 'flex';
+        } catch(e) { /* tiho */ }
+    }
 
     function switchTab(tab, el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
