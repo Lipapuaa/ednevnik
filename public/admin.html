@@ -1025,7 +1025,7 @@
                 grid.innerHTML = '<div class="loading" style="grid-column:1/-1">Nema razreda. Kreiraj prvi razred ispod.</div>';
             } else {
                 grid.innerHTML = razredi.map(r => {
-                    const brojUcenika = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id === r.id).length;
+                    const brojUcenika = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id == r.id).length;
                     return `
                         <div class="razred-kartica" id="kartica-${r.id}" onclick="otvoriUcenike(${r.id}, '${r.naziv}', '${r.skolska_god}')">
                             <div class="razred-k-naziv">${r.naziv}</div>
@@ -1070,7 +1070,7 @@
         document.getElementById('kartica-' + razredId).classList.add('aktivan');
 
         // Filtriraj učenike
-        const ucenici = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id === razredId);
+        const ucenici = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id == razredId);
 
         panel.style.display = 'block';
         panel.innerHTML = `
