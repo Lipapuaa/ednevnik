@@ -673,13 +673,21 @@
 
     async function promijeniStatus(id, status) {
         try {
-            await fetch(`/api/izostanak/${id}/status`, {
+            const res  = await fetch(`/api/izostanak/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status, opravdao_id: korisnik.id })
             });
-            ucitajPravdanje();
-        } catch(e) { console.error(e); }
+            const data = await res.json();
+            if (!res.ok) { alert(data.greska || 'Greška pri promjeni statusa.'); return; }
+            // Ukloni red iz tablice odmah bez ponovnog fetcha
+            const row = document.getElementById(`red-${id}`);
+            if (row) row.remove();
+            // Ako tablica prazna, prikaži poruku
+            const tb = document.getElementById('tabelaPravdanje');
+            if (tb && tb.querySelectorAll('tr').length === 0)
+                tb.innerHTML = '<tr><td colspan="6" class="empty">Nema izostanaka na čekanju. 🎉</td></tr>';
+        } catch(e) { alert('Greška pri spajanju na server.'); }
     }
 
     // ─── VLADANJE ────────────────────────────────────────────
