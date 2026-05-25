@@ -30,11 +30,13 @@ const PORT = 3000;
 //  LOGIN
 // ============================================================
 app.post('/api/login', (req, res) => {
+
     const { email, lozinka } = req.body;
 
     console.log("BODY:", req.body);
 
     if (!email || !lozinka) {
+
         return res.status(400).json({
             greska: 'Email i lozinka su obavezni.'
         });
@@ -43,9 +45,11 @@ app.post('/api/login', (req, res) => {
     db.query(
         'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
         [email],
-        async (err, rezultati) => {
+
+        (err, rezultati) => {
 
             if (err) {
+
                 console.log("MYSQL GRESKA:", err);
 
                 return res.status(500).json({
@@ -56,6 +60,7 @@ app.post('/api/login', (req, res) => {
             console.log("REZULTATI:", rezultati);
 
             if (rezultati.length === 0) {
+
                 return res.status(401).json({
                     greska: 'Nema korisnika.'
                 });
@@ -63,32 +68,30 @@ app.post('/api/login', (req, res) => {
 
             const korisnik = rezultati[0];
 
-            console.log("HASH IZ BAZE:", korisnik.lozinka_hash);
+            console.log("LOZINKA IZ BAZE:", korisnik.lozinka_hash);
 
-            try {
+            const poklapanje =
+                lozinka === korisnik.lozinka_hash;
 
-               
+            console.log("POKLAPANJE:", poklapanje);
 
-                res.json({
-                    id: korisnik.id,
-                    ime: korisnik.ime,
-                    prezime: korisnik.prezime,
-                    email: korisnik.email,
-                    uloga: korisnik.uloga
-                });
+            if (!poklapanje) {
 
-            } catch (greska) {
-
-                console.log("BCRYPT GRESKA:", greska);
-
-                return res.status(500).json({
-                    greska: 'Greška pri provjeri lozinke.'
+                return res.status(401).json({
+                    greska: 'Pogrešna lozinka.'
                 });
             }
+
+            res.json({
+                id: korisnik.id,
+                ime: korisnik.ime,
+                prezime: korisnik.prezime,
+                email: korisnik.email,
+                uloga: korisnik.uloga
+            });
         }
     );
 });
-
 // ============================================================
 //  UČENIK — ocjene po predmetima
 // ============================================================
