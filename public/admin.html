@@ -1287,12 +1287,14 @@
 
     async function izvrsiObrisanje() {
         if (!_brisiTip || !_brisiId) return;
+        const tip = _brisiTip;
+        const id  = _brisiId;
         zatvoriModal();
 
         const urls = {
-            korisnik: `/api/admin/korisnik/${_brisiId}`,
-            razred:   `/api/admin/razred/${_brisiId}`,
-            predmet:  `/api/admin/predmet/${_brisiId}`,
+            korisnik: `/api/admin/korisnik/${id}`,
+            razred:   `/api/admin/razred/${id}`,
+            predmet:  `/api/admin/predmet/${id}`,
         };
         const osvjezi = {
             korisnik: () => { ucitajKorisnike(); ucitajStatistike(); ucitajRazrede(); },
@@ -1301,8 +1303,8 @@
         };
 
         try {
-            const res = await fetch(urls[_brisiTip], { method: 'DELETE' });
-            if (res.ok) osvjezi[_brisiTip]?.();
+            const res = await fetch(urls[tip], { method: 'DELETE' });
+            if (res.ok) osvjezi[tip]?.();
             else {
                 const data = await res.json();
                 alert(data.greska || 'Greška pri brisanju.');
