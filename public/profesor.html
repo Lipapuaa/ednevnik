@@ -597,7 +597,7 @@
                 body: JSON.stringify({
                     ucenik_id: parseInt(ucenik_id),
                     predmet_id: parseInt(predmet_id),
-                    profesor_id: korisnik.id,
+                    profesor_id: korisnik.profesor_id || korisnik.id,
                     ocjena: parseInt(ocjena),
                     datum, tip, komentar
                 })
