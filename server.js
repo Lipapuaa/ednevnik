@@ -34,8 +34,11 @@ app.post('/api/login', (req, res) => {
 
     console.log("BODY:", req.body);
 
-    if (!email || !lozinka)
-        return res.status(400).json({ greska: 'Email i lozinka su obavezni.' });
+    if (!email || !lozinka) {
+        return res.status(400).json({
+            greska: 'Email i lozinka su obavezni.'
+        });
+    }
 
     db.query(
         'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
@@ -43,38 +46,56 @@ app.post('/api/login', (req, res) => {
         async (err, rezultati) => {
 
             if (err) {
-                console.log(err);
-                return res.status(500).json({ greska: 'Greška na serveru.' });
+                console.log("MYSQL GRESKA:", err);
+
+                return res.status(500).json({
+                    greska: 'Greška na serveru.'
+                });
             }
 
             console.log("REZULTATI:", rezultati);
 
             if (rezultati.length === 0) {
-                return res.status(401).json({ greska: 'Nema korisnika.' });
+                return res.status(401).json({
+                    greska: 'Nema korisnika.'
+                });
             }
 
             const korisnik = rezultati[0];
 
             console.log("HASH IZ BAZE:", korisnik.lozinka_hash);
 
-            const poklapanje = await bcrypt.compare(
-                lozinka,
-                korisnik.lozinka_hash
-            );
+            try {
 
-            console.log("POKLAPANJE:", poklapanje);
+                const poklapanje = await bcrypt.compare(
+                    lozinka,
+                    korisnik.lozinka_hash
+                );
 
-            if (!poklapanje) {
-                return res.status(401).json({ greska: 'Pogrešna lozinka.' });
+                console.log("POKLAPANJE:", poklapanje);
+
+                if (!poklapanje) {
+                    return res.status(401).json({
+                        greska: 'Pogrešna lozinka.'
+                    });
+                }
+
+                res.json({
+                    id: korisnik.id,
+                    ime: korisnik.ime,
+                    prezime: korisnik.prezime,
+                    email: korisnik.email,
+                    uloga: korisnik.uloga
+                });
+
+            } catch (greska) {
+
+                console.log("BCRYPT GRESKA:", greska);
+
+                return res.status(500).json({
+                    greska: 'Greška pri provjeri lozinke.'
+                });
             }
-
-            res.json({
-                id: korisnik.id,
-                ime: korisnik.ime,
-                prezime: korisnik.prezime,
-                email: korisnik.email,
-                uloga: korisnik.uloga
-            });
         }
     );
 });
