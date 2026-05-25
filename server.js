@@ -412,12 +412,13 @@ app.get('/api/profesor/:id/izostanci', (req, res) => {
             CONCAT(k.ime, ' ', k.prezime) AS ucenik,
             p.naziv AS predmet
         FROM izostanci i
-        JOIN ucenici u   ON u.id = i.ucenik_id
-        JOIN korisnici k ON k.id = u.korisnik_id
-        JOIN predmeti p  ON p.id = i.predmet_id
-        JOIN profesori pr ON pr.korisnik_id = ?
-        WHERE u.razred_id = pr.razred_id
-          AND i.status = 'na_cekanju'
+        JOIN ucenici u    ON u.id = i.ucenik_id
+        JOIN korisnici k  ON k.id = u.korisnik_id
+        JOIN predmeti p   ON p.id = i.predmet_id
+        WHERE i.status = 'na_cekanju'
+          AND u.razred_id = (
+              SELECT razred_id FROM profesori WHERE korisnik_id = ? LIMIT 1
+          )
         ORDER BY i.datum DESC
     `;
     db.query(sql, [req.params.id], (err, rezultati) => {
