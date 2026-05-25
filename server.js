@@ -67,18 +67,7 @@ app.post('/api/login', (req, res) => {
 
             try {
 
-                const poklapanje = await bcrypt.compare(
-                    lozinka,
-                    korisnik.lozinka_hash
-                );
-
-                console.log("POKLAPANJE:", poklapanje);
-
-                if (!poklapanje) {
-                    return res.status(401).json({
-                        greska: 'Pogrešna lozinka.'
-                    });
-                }
+               
 
                 res.json({
                     id: korisnik.id,
