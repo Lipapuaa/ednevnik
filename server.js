@@ -615,10 +615,29 @@ app.post('/api/admin/razred', (req, res) => {
 });
 
 app.delete('/api/admin/razred/:id', (req, res) => {
-    db.query('DELETE FROM razredi WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ greska: 'Greška pri brisanju razreda.' });
-        res.json({ poruka: 'Razred obrisan.' });
-    });
+    const id = req.params.id;
+    // Nullify all FK references before deleting
+    const koraci = [
+        'UPDATE ucenici SET razred_id = NULL WHERE razred_id = ?',
+        'UPDATE profesori SET je_razredni = 0, razred_id = NULL WHERE razred_id = ?',
+        'DELETE FROM predmet_razred_profesor WHERE razred_id = ?',
+        'DELETE FROM raspored WHERE razred_id = ?',
+    ];
+    let i = 0;
+    function sljedeci() {
+        if (i >= koraci.length) {
+            db.query('DELETE FROM razredi WHERE id = ?', [id], (err) => {
+                if (err) return res.status(500).json({ greska: 'Greška pri brisanju razreda.' });
+                res.json({ poruka: 'Razred obrisan.' });
+            });
+            return;
+        }
+        db.query(koraci[i++], [id], (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška pri čišćenju veza razreda.' });
+            sljedeci();
+        });
+    }
+    sljedeci();
 });
 
 // ============================================================
