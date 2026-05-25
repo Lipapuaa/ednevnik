@@ -429,6 +429,20 @@ app.get('/api/profesor/:id/izostanci', (req, res) => {
 // ============================================================
 //  VLADANJE
 // ============================================================
+app.get('/api/ucenik/:id/vladanje', (req, res) => {
+    const sql = `
+        SELECT v.polugodiste, v.ocjena, v.biljeska, v.skolska_god
+        FROM vladanje v
+        JOIN ucenici u ON u.id = v.ucenik_id
+        WHERE u.korisnik_id = ?
+        ORDER BY v.skolska_god, v.polugodiste
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
 app.get('/api/razred/:id/vladanje', (req, res) => {
     const sql = `
         SELECT 
