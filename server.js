@@ -637,10 +637,36 @@ app.put('/api/admin/ucenik/:id/razred', (req, res) => {
 });
 
 app.delete('/api/admin/korisnik/:id', (req, res) => {
-    db.query('DELETE FROM korisnici WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ greska: 'Greška pri brisanju korisnika.' });
-        res.json({ poruka: 'Korisnik obrisan.' });
-    });
+    const id = req.params.id;
+    // Najprije čisti sve vezane podatke
+    const koraci = [
+        'DELETE FROM ocjene    WHERE ucenik_id  IN (SELECT id FROM ucenici WHERE korisnik_id = ?)',
+        'DELETE FROM izostanci WHERE ucenik_id  IN (SELECT id FROM ucenici WHERE korisnik_id = ?)',
+        'DELETE FROM vladanje  WHERE ucenik_id  IN (SELECT id FROM ucenici WHERE korisnik_id = ?)',
+        'DELETE FROM ocjene    WHERE profesor_id IN (SELECT id FROM profesori WHERE korisnik_id = ?)',
+        'DELETE FROM izostanci WHERE opravdao_id IN (SELECT id FROM profesori WHERE korisnik_id = ?)',
+        'DELETE FROM vladanje  WHERE postavio_id IN (SELECT id FROM profesori WHERE korisnik_id = ?)',
+        'DELETE FROM predmet_razred_profesor WHERE profesor_id IN (SELECT id FROM profesori WHERE korisnik_id = ?)',
+        'DELETE FROM raspored  WHERE profesor_id IN (SELECT id FROM profesori WHERE korisnik_id = ?)',
+        'UPDATE profesori SET je_razredni = 0, razred_id = NULL WHERE korisnik_id = ?',
+        'DELETE FROM ucenici   WHERE korisnik_id = ?',
+        'DELETE FROM profesori WHERE korisnik_id = ?',
+    ];
+    let i = 0;
+    function sljedeci() {
+        if (i >= koraci.length) {
+            db.query('DELETE FROM korisnici WHERE id = ?', [id], (err) => {
+                if (err) return res.status(500).json({ greska: 'Greška pri brisanju korisnika.' });
+                res.json({ poruka: 'Korisnik obrisan.' });
+            });
+            return;
+        }
+        db.query(koraci[i++], [id], (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška pri čišćenju podataka: ' + err.message });
+            sljedeci();
+        });
+    }
+    sljedeci();
 });
 
 // ============================================================
@@ -715,10 +741,28 @@ app.post('/api/admin/predmet', (req, res) => {
 });
 
 app.delete('/api/admin/predmet/:id', (req, res) => {
-    db.query('DELETE FROM predmeti WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ greska: 'Greška pri brisanju predmeta.' });
-        res.json({ poruka: 'Predmet obrisan.' });
-    });
+    const id = req.params.id;
+    const koraci = [
+        'DELETE FROM ocjene    WHERE predmet_id = ?',
+        'DELETE FROM izostanci WHERE predmet_id = ?',
+        'DELETE FROM raspored  WHERE predmet_id = ?',
+        'DELETE FROM predmet_razred_profesor WHERE predmet_id = ?',
+    ];
+    let i = 0;
+    function sljedeci() {
+        if (i >= koraci.length) {
+            db.query('DELETE FROM predmeti WHERE id = ?', [id], (err) => {
+                if (err) return res.status(500).json({ greska: 'Greška pri brisanju predmeta.' });
+                res.json({ poruka: 'Predmet obrisan.' });
+            });
+            return;
+        }
+        db.query(koraci[i++], [id], (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška pri čišćenju veza predmeta.' });
+            sljedeci();
+        });
+    }
+    sljedeci();
 });
 
 // ============================================================
