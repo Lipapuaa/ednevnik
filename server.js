@@ -46,7 +46,11 @@ app.post('/api/login', (req, res) => {
     }
 
     db.query(
-        'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
+        `SELECT k.*, pr.id AS profesor_id, u.id AS ucenik_id
+         FROM korisnici k
+         LEFT JOIN profesori pr ON pr.korisnik_id = k.id
+         LEFT JOIN ucenici u    ON u.korisnik_id  = k.id
+         WHERE k.email = ? AND k.aktivan = 1`,
         [email],
 
         async (err, rezultati) => {
@@ -108,7 +112,9 @@ app.post('/api/login', (req, res) => {
                     ime: korisnik.ime,
                     prezime: korisnik.prezime,
                     email: korisnik.email,
-                    uloga: korisnik.uloga
+                    uloga: korisnik.uloga,
+                    profesor_id: korisnik.profesor_id || null,
+                    ucenik_id:   korisnik.ucenik_id   || null
                 });
 
             } catch (greska) {
