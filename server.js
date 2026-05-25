@@ -46,7 +46,7 @@ app.post('/api/login', (req, res) => {
         'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
         [email],
 
-        (err, rezultati) => {
+        async (err, rezultati) => {
 
             if (err) {
 
@@ -70,25 +70,52 @@ app.post('/api/login', (req, res) => {
 
             console.log("LOZINKA IZ BAZE:", korisnik.lozinka_hash);
 
-            const poklapanje =
-                lozinka === korisnik.lozinka_hash;
+            let poklapanje = false;
 
-            console.log("POKLAPANJE:", poklapanje);
+            try {
 
-            if (!poklapanje) {
+                // ADMIN bez bcrypt-a
+                if (korisnik.uloga === 'admin') {
 
-                return res.status(401).json({
-                    greska: 'Pogrešna lozinka.'
+                    poklapanje =
+                        lozinka === korisnik.lozinka_hash;
+
+                }
+
+                // OSTALI korisnici sa bcrypt-om
+                else {
+
+                    poklapanje = await bcrypt.compare(
+                        lozinka,
+                        korisnik.lozinka_hash
+                    );
+                }
+
+                console.log("POKLAPANJE:", poklapanje);
+
+                if (!poklapanje) {
+
+                    return res.status(401).json({
+                        greska: 'Pogrešna lozinka.'
+                    });
+                }
+
+                res.json({
+                    id: korisnik.id,
+                    ime: korisnik.ime,
+                    prezime: korisnik.prezime,
+                    email: korisnik.email,
+                    uloga: korisnik.uloga
+                });
+
+            } catch (greska) {
+
+                console.log("GRESKA:", greska);
+
+                return res.status(500).json({
+                    greska: 'Greška pri prijavi.'
                 });
             }
-
-            res.json({
-                id: korisnik.id,
-                ime: korisnik.ime,
-                prezime: korisnik.prezime,
-                email: korisnik.email,
-                uloga: korisnik.uloga
-            });
         }
     );
 });
