@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bs">
 <head>
@@ -1002,6 +1001,7 @@
                 document.getElementById('nkUloga').value = '';
                 document.getElementById('polja-ucenik').style.display  = 'none';
                 document.getElementById('polja-profesor').style.display = 'none';
+                ucitajRazrede();
             }
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
     }
@@ -1367,7 +1367,7 @@
             });
             const data = await res.json();
             if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else prikaziAlert(alertEl, 'success', '✅ Razred učenika uspješno promijenjen!');
+            else { prikaziAlert(alertEl, 'success', '✅ Razred učenika uspješno promijenjen!'); ucitajRazrede(); }
         } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
     }
 
