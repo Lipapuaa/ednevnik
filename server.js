@@ -11,17 +11,20 @@ app.use(express.static('public'));
 // ============================================================
 //  SPAJANJE NA BAZU
 // ============================================================
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: 'mainline.proxy.rlwy.net',
     user: 'root',
     password: 'sNHyHZpdIVwAtynkUNWpBDZUXPlwniUS',
     database: 'railway',
-    port: 36927
+    port: 36927,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect((err) => {
+db.query('SELECT 1', (err) => {
     if (err) console.log("GRESKA:", err);
-    else     console.log("Spojeno na Railway bazu");
+    else     console.log("Spojeno na Railway bazu (pool)");
 });
 
 const PORT = 3000;
