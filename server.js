@@ -448,21 +448,32 @@ app.post('/api/vladanje', (req, res) => {
     if (!ucenik_id || !ocjena || !polugodiste || !postavio_id)
         return res.status(400).json({ greska: 'Nedostaju obavezna polja.' });
 
+    // Normalizuj postavio_id — prihvati i korisnici.id i profesori.id
     db.query(
-        'SELECT r.skolska_god FROM ucenici u JOIN razredi r ON r.id = u.razred_id WHERE u.id = ?',
-        [ucenik_id],
-        (err, rows) => {
-            if (err || !rows.length) return res.status(500).json({ greska: 'Greška.' });
-            const skolska_god = rows[0].skolska_god;
-            const sql = `
-                INSERT INTO vladanje (ucenik_id, skolska_god, polugodiste, ocjena, biljeska, postavio_id)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE ocjena = VALUES(ocjena), biljeska = VALUES(biljeska), postavio_id = VALUES(postavio_id)
-            `;
-            db.query(sql, [ucenik_id, skolska_god, polugodiste, ocjena, biljeska || null, postavio_id], (err2) => {
-                if (err2) return res.status(500).json({ greska: 'Greška pri upisu vladanja.' });
-                res.json({ poruka: 'Vladanje upisano!' });
-            });
+        'SELECT id FROM profesori WHERE id = ? OR korisnik_id = ? LIMIT 1',
+        [postavio_id, postavio_id],
+        (errPr, prRows) => {
+            if (errPr || !prRows.length)
+                return res.status(400).json({ greska: 'Profesor nije pronađen.' });
+            const stvarniPostavioId = prRows[0].id;
+
+            db.query(
+                'SELECT r.skolska_god FROM ucenici u JOIN razredi r ON r.id = u.razred_id WHERE u.id = ?',
+                [ucenik_id],
+                (err, rows) => {
+                    if (err || !rows.length) return res.status(500).json({ greska: 'Greška.' });
+                    const skolska_god = rows[0].skolska_god;
+                    const sql = `
+                        INSERT INTO vladanje (ucenik_id, skolska_god, polugodiste, ocjena, biljeska, postavio_id)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE ocjena = VALUES(ocjena), biljeska = VALUES(biljeska), postavio_id = VALUES(postavio_id)
+                    `;
+                    db.query(sql, [ucenik_id, skolska_god, polugodiste, ocjena, biljeska || null, stvarniPostavioId], (err2) => {
+                        if (err2) return res.status(500).json({ greska: 'Greška pri upisu vladanja: ' + err2.message });
+                        res.json({ poruka: 'Vladanje upisano!' });
+                    });
+                }
+            );
         }
     );
 });
