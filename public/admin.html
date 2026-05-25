@@ -1,1608 +1,805 @@
-<!DOCTYPE html>
-<html lang="bs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Dnevnik | Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+const express = require('express');
+const mysql   = require('mysql2');
+const bcrypt  = require('bcrypt');
+const cors    = require('cors');
 
-        :root {
-            --navy:   #0f1b2d;
-            --blue:   #1a3a5c;
-            --accent: #e8a020;
-            --light:  #f4f0e8;
-            --white:  #ffffff;
-            --green:  #27ae60;
-            --red:    #c0392b;
-            --grey:   #f8f7f4;
-            --purple: #8e44ad;
-        }
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-        body { background: var(--grey); font-family: 'DM Sans', sans-serif; color: var(--navy); min-height: 100vh; }
+// ============================================================
+//  SPAJANJE NA BAZU
+// ============================================================
+const db = mysql.createPool({
+    host: 'mainline.proxy.rlwy.net',
+    user: 'root',
+    password: 'sNHyHZpdIVwAtynkUNWpBDZUXPlwniUS',
+    database: 'railway',
+    port: 36927,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
-        /* NAVBAR */
-        .navbar {
-            background: var(--navy);
-            padding: 0 40px; height: 64px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .navbar-logo {
-            font-family: 'DM Serif Display', serif;
-            color: var(--white); font-size: 20px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .navbar-logo span {
-            background: var(--red); border-radius: 6px;
-            padding: 4px 10px; font-size: 13px;
-            font-family: 'DM Sans', sans-serif; font-weight: 500; color: white;
-        }
-        .navbar-user { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.7); font-size: 14px; }
-        .btn-logout {
-            background: rgba(255,255,255,0.1); color: white; border: none;
-            padding: 8px 16px; border-radius: 4px; cursor: pointer;
-            font-family: 'DM Sans', sans-serif; font-size: 13px; transition: background 0.2s;
-        }
-        .btn-logout:hover { background: rgba(255,255,255,0.2); }
+db.query('SELECT 1', (err) => {
+    if (err) console.log("GRESKA:", err);
+    else     console.log("Spojeno na Railway bazu (pool)");
+});
 
-        /* TABS */
-        .tabs {
-            background: var(--white);
-            border-bottom: 1px solid #e8e4dc;
-            padding: 0 40px; display: flex;
-        }
-        .tab {
-            padding: 18px 24px; cursor: pointer;
-            font-size: 14px; font-weight: 500; color: #888;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s; user-select: none;
-        }
-        .tab:hover { color: var(--navy); }
-        .tab.active { color: var(--navy); border-bottom-color: var(--accent); }
+const PORT = 3000;
 
-        .main { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
-        .page { display: none; }
-        .page.active { display: block; }
+// ============================================================
+//  LOGIN
+// ============================================================
+app.post('/api/login', (req, res) => {
 
-        .page-header { margin-bottom: 28px; }
-        .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 32px; }
-        .page-header p { color: #888; font-size: 14px; margin-top: 4px; font-weight: 300; }
+    const { email, lozinka } = req.body;
 
-        /* STATS */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px; margin-bottom: 28px;
-        }
-        .stat-card {
-            background: var(--white);
-            border: 1px solid #e8e4dc;
-            border-radius: 8px;
-            padding: 20px 24px;
-        }
-        .stat-label { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: #aaa; margin-bottom: 8px; }
-        .stat-value { font-family: 'DM Serif Display', serif; font-size: 36px; color: var(--navy); }
-        .stat-value.accent { color: var(--accent); }
-        .stat-value.green  { color: var(--green); }
-        .stat-value.red    { color: var(--red); }
+    console.log("BODY:", req.body);
 
-        /* CARD */
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .card {
-            background: var(--white); border-radius: 8px;
-            border: 1px solid #e8e4dc; overflow: hidden;
-            margin-bottom: 24px;
-        }
-        .card-header {
-            padding: 20px 24px; border-bottom: 1px solid #e8e4dc;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .card-header h3 { font-family: 'DM Serif Display', serif; font-size: 18px; }
-        .card-body { padding: 24px; }
+    if (!email || !lozinka) {
 
-        /* FORM */
-        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-        label {
-            font-size: 11px; font-weight: 500;
-            letter-spacing: 1px; text-transform: uppercase; color: #888;
-        }
-        select, input {
-            padding: 11px 14px; border: 1.5px solid #ddd;
-            border-radius: 4px; font-family: 'DM Sans', sans-serif;
-            font-size: 14px; color: var(--navy); background: var(--white);
-            outline: none; transition: border-color 0.2s; width: 100%;
-        }
-        select:focus, input:focus { border-color: var(--accent); }
-
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        /* BUTTONS */
-        .btn {
-            padding: 11px 24px; border: none; border-radius: 4px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-primary { background: var(--navy); color: white; }
-        .btn-primary:hover { background: var(--blue); }
-        .btn-danger  { background: var(--red); color: white; }
-        .btn-danger:hover { background: #a93226; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-ghost {
-            background: transparent; color: var(--red);
-            border: 1px solid #f0d0cc; font-size: 12px;
-            padding: 4px 10px; border-radius: 4px; cursor: pointer;
-        }
-        .btn-ghost:hover { background: #fadbd8; }
-        .btn-edit {
-            background: transparent; color: #1a5276;
-            border: 1px solid #d6eaf8; font-size: 12px;
-            padding: 4px 10px; border-radius: 4px; cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-        }
-        .btn-edit:hover { background: #d6eaf8; }
-        .btn-delete {
-            background: transparent; color: var(--red);
-            border: 1px solid #f5c6c6; font-size: 12px;
-            padding: 4px 10px; border-radius: 4px; cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-        }
-        .btn-delete:hover { background: #fadbd8; }
-
-        /* Modal potvrde brisanja */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 1000;
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal {
-            background: var(--white); border-radius: 8px;
-            padding: 32px; max-width: 400px; width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .modal h3 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 12px; }
-        .modal p  { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
-        .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-        .modal-btns .btn-cancel {
-            background: #f0f0f0; color: #555; border: none;
-            padding: 10px 20px; border-radius: 4px; cursor: pointer;
-            font-family: 'DM Sans', sans-serif; font-size: 14px;
-        }
-        .modal-btns .btn-confirm-delete {
-            background: var(--red); color: white; border: none;
-            padding: 10px 20px; border-radius: 4px; cursor: pointer;
-            font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-        }
-
-        /* ALERTS */
-        .alert {
-            padding: 12px 16px; border-radius: 4px;
-            font-size: 14px; margin-bottom: 16px; display: none;
-        }
-        .alert.show { display: block; }
-        .alert-success { background: #d5f5e3; color: #1e8449; border-left: 3px solid var(--green); }
-        .alert-error   { background: #fadbd8; color: #922b21; border-left: 3px solid var(--red); }
-
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; }
-        th {
-            padding: 12px 20px; text-align: left;
-            font-size: 11px; font-weight: 500;
-            letter-spacing: 1px; text-transform: uppercase;
-            color: #aaa; background: #fafaf8;
-            border-bottom: 1px solid #e8e4dc;
-        }
-        td { padding: 12px 20px; font-size: 14px; border-bottom: 1px solid #f0ece4; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #fafaf8; }
-        .empty, .loading { text-align: center; padding: 40px; color: #bbb; font-size: 14px; }
-
-        /* BADGES */
-        .badge {
-            display: inline-block; padding: 3px 8px;
-            border-radius: 20px; font-size: 11px; font-weight: 500;
-        }
-        .badge-admin    { background: #f9ebf9; color: var(--purple); }
-        .badge-profesor { background: #d6eaf8; color: #1a5276; }
-        .badge-ucenik   { background: #d5f5e3; color: #1e8449; }
-        .badge-razredni { background: #fdebd0; color: #a04000; font-size: 10px; margin-left: 4px; }
-        .badge-aktivan  { background: #d5f5e3; color: #1e8449; }
-        .badge-neaktivan{ background: #fadbd8; color: #922b21; }
-
-        .divider { border: none; border-top: 1px solid #e8e4dc; margin: 20px 0; }
-
-        /* Password toggle */
-        .input-wrap { position: relative; }
-        .input-wrap input { padding-right: 40px; }
-        .toggle-pw {
-            position: absolute; right: 12px; top: 50%;
-            transform: translateY(-50%);
-            background: none; border: none; cursor: pointer;
-            color: #aaa; font-size: 16px;
-        }
-
-        /* ── RAZREDI KARTICE ────────────────────────────── */
-        .razredi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .razred-kartica {
-            background: var(--white);
-            border: 2px solid #e8e4dc;
-            border-radius: 10px;
-            padding: 24px 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            position: relative;
-        }
-        .razred-kartica:hover {
-            border-color: var(--accent);
-            box-shadow: 0 4px 16px rgba(232,160,32,0.15);
-            transform: translateY(-2px);
-        }
-        .razred-kartica.aktivan {
-            border-color: var(--navy);
-            background: var(--navy);
-            color: white;
-        }
-        .razred-kartica.aktivan .razred-k-naziv { color: white; }
-        .razred-kartica.aktivan .razred-k-god   { color: rgba(255,255,255,0.5); }
-        .razred-kartica.aktivan .razred-k-broj  { background: rgba(255,255,255,0.15); color: white; }
-        .razred-k-naziv {
-            font-family: 'DM Serif Display', serif;
-            font-size: 28px; color: var(--navy);
-            margin-bottom: 4px;
-        }
-        .razred-k-god {
-            font-size: 12px; color: #aaa; margin-bottom: 12px;
-        }
-        .razred-k-broj {
-            display: inline-block;
-            background: var(--grey);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px; font-weight: 500;
-            color: #666;
-        }
-        .razred-k-razredni {
-            font-size: 11px; color: #aaa; margin-top: 8px;
-        }
-        .razred-k-razredni strong { color: #888; }
-
-        /* Učenici panel */
-        .ucenici-panel {
-            background: var(--white);
-            border: 1px solid #e8e4dc;
-            border-radius: 8px;
-            overflow: hidden;
-            animation: slideDown 0.25s ease;
-        }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .ucenici-panel-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e8e4dc;
-            display: flex; align-items: center; justify-content: space-between;
-            background: var(--navy);
-            color: white;
-        }
-        .ucenici-panel-header h3 {
-            font-family: 'DM Serif Display', serif;
-            font-size: 20px; color: white;
-        }
-        .ucenici-panel-header .zatvori-btn {
-            background: rgba(255,255,255,0.1);
-            border: none; color: white;
-            padding: 6px 12px; border-radius: 4px;
-            cursor: pointer; font-size: 13px;
-            font-family: 'DM Sans', sans-serif;
-            transition: background 0.2s;
-        }
-        .ucenici-panel-header .zatvori-btn:hover { background: rgba(255,255,255,0.2); }
-
-        .novi-razred-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    </style>
-</head>
-<body>
-
-<nav class="navbar">
-    <div class="navbar-logo">📖 E-Dnevnik <span>Admin</span></div>
-    <div class="navbar-user">
-        <span id="navIme">...</span>
-        <button class="btn-logout" onclick="odjava()">Odjavi se</button>
-    </div>
-</nav>
-
-<div class="tabs">
-    <div class="tab active" onclick="switchTab('pregled', this)">📊 Pregled</div>
-    <div class="tab" onclick="switchTab('korisnici', this)">👥 Korisnici</div>
-    <div class="tab" onclick="switchTab('noviKorisnik', this)">➕ Novi korisnik</div>
-    <div class="tab" onclick="switchTab('razredi', this)">🏫 Razredi</div>
-    <div class="tab" onclick="switchTab('predmeti', this)">📚 Predmeti</div>
-    <div class="tab" onclick="switchTab('dodjela', this)">🔗 Dodjela predmeta</div>
-    <div class="tab" onclick="switchTab('raspored', this)">🗓 Raspored</div>
-</div>
-
-<div class="main">
-
-    <!-- ===================== PREGLED ===================== -->
-    <div class="page active" id="page-pregled">
-        <div class="page-header">
-            <h1>Administratorski panel</h1>
-            <p>Pregled stanja sistema</p>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Ukupno učenika</div>
-                <div class="stat-value accent" id="statUcenika">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Ukupno profesora</div>
-                <div class="stat-value" id="statProfesora">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Razreda</div>
-                <div class="stat-value green" id="statRazreda">—</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Predmeta</div>
-                <div class="stat-value" id="statPredmeta">—</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header"><h3>Svi korisnici</h3></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ime i prezime</th>
-                        <th>Email</th>
-                        <th>Uloga</th>
-                        <th>Status</th>
-                        <th>Registrovan</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaPregled">
-                    <tr><td colspan="5" class="loading">Učitavanje...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ===================== KORISNICI ===================== -->
-    <div class="page" id="page-korisnici">
-        <div class="page-header">
-            <h1>Upravljanje korisnicima</h1>
-            <p>Aktiviraj, deaktiviraj i uredi profile korisnika</p>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Lista korisnika</h3>
-                <div style="display:flex;gap:8px">
-                    <select id="filterUloga" onchange="ucitajKorisnike()" style="width:auto;padding:8px 12px;font-size:13px">
-                        <option value="">Sve uloge</option>
-                        <option value="profesor">Profesori</option>
-                        <option value="ucenik">Učenici</option>
-                        <option value="admin">Admini</option>
-                    </select>
-                </div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ime i prezime</th>
-                        <th>Email</th>
-                        <th>Uloga</th>
-                        <th>Status</th>
-                        <th>Akcije</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaKorisnici">
-                    <tr><td colspan="5" class="loading">Učitavanje...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Promjena razreda ucenik -->
-        <div class="card">
-            <div class="card-header"><h3>Promijeni razred učenika</h3></div>
-            <div class="card-body">
-                <div id="alertPromjenaRazreda" class="alert"></div>
-                <div class="form-row" style="align-items:end">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label>Učenik</label>
-                        <select id="selUcenikRazred"><option value="">— Odaberi učenika —</option></select>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0">
-                        <label>Novi razred</label>
-                        <select id="selNoviRazred"><option value="">— Odaberi razred —</option></select>
-                    </div>
-                </div>
-                <div style="margin-top:16px">
-                    <button class="btn btn-primary" onclick="promijeniRazredUcenika()">🔄 Promijeni razred</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dodjela razrednog profesora -->
-        <div class="card">
-            <div class="card-header"><h3>Dodjeli razrednog starješinu</h3></div>
-            <div class="card-body">
-                <div id="alertRazredni" class="alert"></div>
-                <div class="form-row" style="align-items:end">
-                    <div class="form-group" style="margin-bottom:0">
-                        <label>Profesor</label>
-                        <select id="selProfesorRazredni">
-                            <option value="">— Odaberi profesora —</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom:0">
-                        <label>Razred</label>
-                        <select id="selRazredRazredni">
-                            <option value="">— Odaberi razred —</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="margin-top:16px;display:flex;gap:10px">
-                    <button class="btn btn-primary" onclick="dodijeliRazrednog()">✓ Dodjeli razrednog</button>
-                    <button class="btn" onclick="ukloniRazrednog()" style="background:#fadbd8;color:var(--red)">✗ Ukloni razrednog</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== NOVI KORISNIK ===================== -->
-    <div class="page" id="page-noviKorisnik">
-        <div class="page-header">
-            <h1>Novi korisnik</h1>
-            <p>Kreiraj profil za učenika, profesora ili admina</p>
-        </div>
-
-        <div class="two-col">
-            <div>
-                <div class="card">
-                    <div class="card-header"><h3>Podaci korisnika</h3></div>
-                    <div class="card-body">
-                        <div id="alertNoviK" class="alert"></div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Ime</label>
-                                <input type="text" id="nkIme" placeholder="npr. Amira">
-                            </div>
-                            <div class="form-group">
-                                <label>Prezime</label>
-                                <input type="text" id="nkPrezime" placeholder="npr. Hodžić">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Email adresa</label>
-                            <input type="email" id="nkEmail" placeholder="amira.hodzic@skola.ba">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Lozinka</label>
-                            <div class="input-wrap">
-                                <input type="password" id="nkLozinka" placeholder="Minimalno 6 znakova">
-                                <button class="toggle-pw" onclick="toggleLozinka()">👁</button>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Uloga</label>
-                            <select id="nkUloga" onchange="toggleUlogaPolja()">
-                                <option value="">— Odaberi ulogu —</option>
-                                <option value="ucenik">Učenik</option>
-                                <option value="profesor">Profesor</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-
-                        <!-- Samo za učenike -->
-                        <div id="polja-ucenik" style="display:none">
-                            <hr class="divider">
-                            <div class="form-group">
-                                <label>Razred</label>
-                                <select id="nkRazred">
-                                    <option value="">— Odaberi razred —</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Datum upisa</label>
-                                <input type="date" id="nkDatumUpisa">
-                            </div>
-                        </div>
-
-                        <!-- Samo za profesore -->
-                        <div id="polja-profesor" style="display:none">
-                            <hr class="divider">
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" id="nkJeRazredni" style="width:auto;margin-right:6px" onchange="toggleRazredniPolje()">
-                                    Razredni starješina
-                                </label>
-                            </div>
-                            <div id="polje-razred-prof" style="display:none">
-                                <div class="form-group">
-                                    <label>Razred (razredni starješina)</label>
-                                    <select id="nkRazredProf">
-                                        <option value="">— Odaberi razred —</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="kreirajKorisnika()">
-                            ➕ Kreiraj korisnika
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Uputstvo -->
-            <div>
-                <div class="card">
-                    <div class="card-header"><h3>ℹ️ Napomene</h3></div>
-                    <div class="card-body" style="font-size:14px;line-height:1.8;color:#555">
-                        <p><strong>Učenik</strong> — mora biti dodijeljen razredu. Nakon kreiranja, može se prijaviti i pregledati ocjene i izostanke.</p>
-                        <hr class="divider">
-                        <p><strong>Profesor</strong> — može predavati u više razreda. Ako je razredni starješina, može pravdati izostanke i upisivati vladanje.</p>
-                        <hr class="divider">
-                        <p><strong>Admin</strong> — ima puni pristup sistemu. Može kreirati korisnike i upravljati razredima.</p>
-                        <hr class="divider">
-                        <p style="color:#aaa;font-size:13px">Lozinka se hashira bcrypt algoritmom i nikada se ne čuva u čistom tekstu.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== RAZREDI ===================== -->
-    <div class="page" id="page-razredi">
-        <div class="page-header">
-            <h1>Razredi</h1>
-            <p>Klikni na razred da vidiš učenike — kreiraj i upravljaj razredima</p>
-        </div>
-
-        <!-- Kartice razreda -->
-        <div class="razredi-grid" id="razredeGrid">
-            <div class="loading" style="grid-column:1/-1">Učitavanje...</div>
-        </div>
-
-        <!-- Panel učenika (prikazuje se ispod kartica) -->
-        <div id="ucenici-panel" style="display:none; margin-bottom:24px"></div>
-
-        <!-- Forma za novi razred + tabela -->
-        <div class="novi-razred-layout">
-            <div class="card">
-                <div class="card-header"><h3>Novi razred</h3></div>
-                <div class="card-body">
-                    <div id="alertRazred" class="alert"></div>
-                    <div class="form-group">
-                        <label>Naziv razreda</label>
-                        <input type="text" id="razredNaziv" placeholder="npr. 1A, 2B, 3C">
-                    </div>
-                    <div class="form-group">
-                        <label>Školska godina</label>
-                        <input type="text" id="razredGod" placeholder="npr. 2024/2025" value="2024/2025">
-                    </div>
-                    <button class="btn btn-primary" onclick="kreirajRazred()">Kreiraj razred</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h3>Svi razredi (tabela)</h3></div>
-                <table>
-                    <thead>
-                        <tr><th>Naziv</th><th>Škol. god.</th><th>Razredni</th><th></th></tr>
-                    </thead>
-                    <tbody id="tabelaRazredi">
-                        <tr><td colspan="4" class="loading">Učitavanje...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== PREDMETI ===================== -->
-    <div class="page" id="page-predmeti">
-        <div class="page-header">
-            <h1>Predmeti</h1>
-            <p>Dodaj i upravljaj predmetima</p>
-        </div>
-
-        <div class="two-col">
-            <div class="card">
-                <div class="card-header"><h3>Novi predmet</h3></div>
-                <div class="card-body">
-                    <div id="alertPredmet" class="alert"></div>
-                    <div class="form-group">
-                        <label>Naziv predmeta</label>
-                        <input type="text" id="predmetNaziv" placeholder="npr. Matematika">
-                    </div>
-                    <div class="form-group">
-                        <label>Opis (opciono)</label>
-                        <input type="text" id="predmetOpis" placeholder="Kratki opis predmeta">
-                    </div>
-                    <button class="btn btn-primary" onclick="kreirajPredmet()">Dodaj predmet</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h3>Svi predmeti</h3></div>
-                <table>
-                    <thead>
-                        <tr><th>Naziv</th><th>Opis</th><th></th></tr>
-                    </thead>
-                    <tbody id="tabelaPredmeti">
-                        <tr><td colspan="2" class="loading">Učitavanje...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== DODJELA PREDMETA ===================== -->
-    <div class="page" id="page-dodjela">
-        <div class="page-header">
-            <h1>Dodjela predmeta profesorima</h1>
-            <p>Odredi koji profesor predaje koji predmet u kom razredu</p>
-        </div>
-
-        <div class="two-col">
-            <div class="card">
-                <div class="card-header"><h3>Nova dodjela</h3></div>
-                <div class="card-body">
-                    <div id="alertDodjela" class="alert"></div>
-                    <div class="form-group">
-                        <label>Profesor</label>
-                        <select id="ddProfesor">
-                            <option value="">— Odaberi profesora —</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Predmet</label>
-                        <select id="ddPredmet">
-                            <option value="">— Odaberi predmet —</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Razred</label>
-                        <select id="ddRazred">
-                            <option value="">— Odaberi razred —</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary" onclick="kreirajDodjelu()">🔗 Dodijeli</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header"><h3>Postojeće dodjele</h3></div>
-                <table>
-                    <thead>
-                        <tr><th>Profesor</th><th>Predmet</th><th>Razred</th></tr>
-                    </thead>
-                    <tbody id="tabelaDodjele">
-                        <tr><td colspan="3" class="loading">Učitavanje...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== RASPORED ===================== -->
-    <div class="page" id="page-raspored">
-        <div class="page-header">
-            <h1>Raspored časova</h1>
-            <p>Odaberi razred, pa prevuci predmete u raspored</p>
-        </div>
-
-        <div id="alertRaspored" class="alert" style="margin-bottom:16px"></div>
-
-        <div class="card" style="margin-bottom:20px">
-            <div class="card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-                <label style="font-weight:500;font-size:14px;white-space:nowrap">Razred:</label>
-                <select id="rRazredSelect" onchange="promijeniRazredRaspored()" style="padding:10px 16px;font-size:14px;border:1px solid #e8e4dc;border-radius:6px;font-family:'DM Sans',sans-serif;background:white;min-width:160px">
-                    <option value="">— Odaberi razred —</option>
-                </select>
-                <span id="rasporedInfo" style="font-size:13px;color:#aaa;margin-left:auto"></span>
-            </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:start" id="rasporedLayout">
-            <div class="card">
-                <div class="card-header"><h3>Sedmični raspored</h3></div>
-                <div style="overflow-x:auto">
-                    <table id="rasporedGrid" style="width:100%;border-collapse:collapse;min-width:600px">
-                        <thead>
-                            <tr>
-                                <th style="padding:12px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;width:60px">Čas</th>
-                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Ponedjeljak</th>
-                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Utorak</th>
-                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Srijeda</th>
-                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Četvrtak</th>
-                                <th style="padding:12px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#aaa;border-bottom:1px solid #e8e4dc;text-align:center">Petak</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rasporedGridBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div>
-                <div class="card">
-                    <div class="card-header" style="padding:14px 16px"><h3 style="font-size:14px">Predmeti</h3></div>
-                    <div id="predmetiSidebar" style="padding:12px;min-height:200px">
-                        <p style="color:#aaa;font-size:13px;text-align:center;padding:20px 0">Odaberi razred</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- MODAL POTVRDE BRISANJA -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-        <h3>⚠️ Potvrdi brisanje</h3>
-        <p id="modalTekst">Jesi li sigurna da želiš obrisati ovaj zapis? Ova akcija se ne može poništiti.</p>
-        <div class="modal-btns">
-            <button class="btn-cancel" onclick="zatvoriModal()">Odustani</button>
-            <button class="btn-confirm-delete" id="modalBtnPotvrdi" onclick="">Obriši</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const korisnik = JSON.parse(sessionStorage.getItem('korisnik') || 'null');
-    if (!korisnik || korisnik.uloga !== 'admin') window.location.href = '/';
-    document.getElementById('navIme').textContent = korisnik.ime + ' ' + korisnik.prezime;
-
-    // ─── TABS ────────────────────────────────────────────────
-    function switchTab(tab, el) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('page-' + tab).classList.add('active');
-        const actions = {
-            pregled:      () => { ucitajPregled(); ucitajStatistike(); },
-            korisnici:    () => { ucitajKorisnike(); ucitajSelektoreRazredni(); ucitajSelektorePromjenaRazreda(); },
-            noviKorisnik: () => { ucitajRazredeZaForme(); },
-            razredi:      () => ucitajRazrede(),
-            predmeti:     () => ucitajPredmete(),
-            dodjela:      () => ucitajDodjelu(),
-            raspored:     () => ucitajSelektoreRaspored(),
-        };
-        if (actions[tab]) actions[tab]();
+        return res.status(400).json({
+            greska: 'Email i lozinka su obavezni.'
+        });
     }
 
-    // ─── INIT ────────────────────────────────────────────────
-    async function init() {
-        await ucitajStatistike();
-        await ucitajPregled();
-    }
+    db.query(
+        'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
+        [email],
 
-    // ─── STATISTIKE ──────────────────────────────────────────
-    async function ucitajStatistike() {
-        try {
-            const res = await fetch('/api/admin/korisnici');
-            const k   = await res.json();
-            document.getElementById('statUcenika').textContent  = k.filter(x => x.uloga === 'ucenik').length;
-            document.getElementById('statProfesora').textContent = k.filter(x => x.uloga === 'profesor').length;
+        async (err, rezultati) => {
 
-            const rRes = await fetch('/api/admin/razredi');
-            const r    = await rRes.json();
-            document.getElementById('statRazreda').textContent  = r.length;
+            if (err) {
 
-            const pRes = await fetch('/api/predmeti');
-            const p    = await pRes.json();
-            document.getElementById('statPredmeta').textContent = p.length;
-        } catch(e) { console.error(e); }
-    }
+                console.log("MYSQL GRESKA:", err);
 
-    // ─── PREGLED ─────────────────────────────────────────────
-    async function ucitajPregled() {
-        try {
-            const res = await fetch('/api/admin/korisnici');
-            const lista = await res.json();
-            const tb = document.getElementById('tabelaPregled');
-            tb.innerHTML = lista.map(k => `
-                <tr>
-                    <td><strong>${k.ime} ${k.prezime}</strong></td>
-                    <td style="color:#888">${k.email}</td>
-                    <td><span class="badge badge-${k.uloga}">${ulogaLabel(k.uloga)}</span></td>
-                    <td><span class="badge ${k.aktivan ? 'badge-aktivan' : 'badge-neaktivan'}">${k.aktivan ? 'Aktivan' : 'Neaktivan'}</span></td>
-                    <td style="color:#aaa;font-size:13px">${new Date(k.kreiran_datum).toLocaleDateString('bs-BA')}</td>
-                </tr>
-            `).join('');
-        } catch(e) {}
-    }
-
-    // ─── KORISNICI ───────────────────────────────────────────
-    async function ucitajKorisnike() {
-        const uloga = document.getElementById('filterUloga').value;
-        try {
-            const res   = await fetch('/api/admin/korisnici');
-            let lista   = await res.json();
-            if (uloga) lista = lista.filter(k => k.uloga === uloga);
-            const tb = document.getElementById('tabelaKorisnici');
-            tb.innerHTML = lista.map(k => `
-                <tr>
-                    <td><strong>${k.ime} ${k.prezime}</strong></td>
-                    <td style="color:#888;font-size:13px">${k.email}</td>
-                    <td>
-                        <span class="badge badge-${k.uloga}">${ulogaLabel(k.uloga)}</span>
-                        ${k.je_razredni ? '<span class="badge badge-razredni">Razredni</span>' : ''}
-                    </td>
-                    <td><span class="badge ${k.aktivan ? 'badge-aktivan' : 'badge-neaktivan'}">${k.aktivan ? 'Aktivan' : 'Neaktivan'}</span></td>
-                    <td style="display:flex;gap:6px">
-                        <button class="btn-edit" onclick="toggleAktivan(${k.id}, ${k.aktivan})">
-                            ${k.aktivan ? '🔒 Deaktiviraj' : '🔓 Aktiviraj'}
-                        </button>
-                        <button class="btn-delete" onclick="potvrdiObrisanje('korisnik', ${k.id}, '${k.ime} ${k.prezime}')">
-                            🗑 Obriši
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch(e) {}
-    }
-
-    async function toggleAktivan(id, trenutni) {
-        const noviStatus = trenutni ? 0 : 1;
-        try {
-            await fetch(`/api/admin/korisnik/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ aktivan: noviStatus })
-            });
-            ucitajKorisnike();
-        } catch(e) {}
-    }
-
-    async function ucitajSelektoreRazredni() {
-        try {
-            const [kRes, rRes] = await Promise.all([
-                fetch('/api/admin/korisnici'),
-                fetch('/api/admin/razredi')
-            ]);
-            const korisnici = await kRes.json();
-            const razredi   = await rRes.json();
-
-            const profesori = korisnici.filter(k => k.uloga === 'profesor');
-            document.getElementById('selProfesorRazredni').innerHTML =
-                '<option value="">— Odaberi profesora —</option>' +
-                profesori.map(p => `<option value="${p.id}">${p.ime} ${p.prezime}</option>`).join('');
-
-            document.getElementById('selRazredRazredni').innerHTML =
-                '<option value="">— Odaberi razred —</option>' +
-                razredi.map(r => `<option value="${r.id}">${r.naziv} (${r.skolska_god})</option>`).join('');
-        } catch(e) {}
-    }
-
-    async function dodijeliRazrednog() {
-        const korisnik_id = document.getElementById('selProfesorRazredni').value;
-        const razred_id   = document.getElementById('selRazredRazredni').value;
-        const alertEl     = document.getElementById('alertRazredni');
-
-        if (!korisnik_id || !razred_id) {
-            prikaziAlert(alertEl, 'error', 'Odaberi profesora i razred.');
-            return;
-        }
-        try {
-            const res = await fetch('/api/admin/razredni', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ korisnik_id: parseInt(korisnik_id), razred_id: parseInt(razred_id) })
-            });
-            const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else { prikaziAlert(alertEl, 'success', '✅ Razredni starješina dodijeljen!'); ucitajKorisnike(); }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju.'); }
-    }
-
-    async function ukloniRazrednog() {
-        const korisnik_id = document.getElementById('selProfesorRazredni').value;
-        const alertEl = document.getElementById('alertRazredni');
-        if (!korisnik_id) { prikaziAlert(alertEl, 'error', 'Odaberi profesora.'); return; }
-        try {
-            const res = await fetch('/api/admin/razredni', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ korisnik_id: parseInt(korisnik_id) })
-            });
-            const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else { prikaziAlert(alertEl, 'success', '✅ Razredni starješina uklonjen!'); ucitajKorisnike(); }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
-    }
-
-    // ─── NOVI KORISNIK ───────────────────────────────────────
-    function toggleUlogaPolja() {
-        const uloga = document.getElementById('nkUloga').value;
-        document.getElementById('polja-ucenik').style.display  = uloga === 'ucenik'   ? 'block' : 'none';
-        document.getElementById('polja-profesor').style.display = uloga === 'profesor' ? 'block' : 'none';
-    }
-
-    function toggleRazredniPolje() {
-        const checked = document.getElementById('nkJeRazredni').checked;
-        document.getElementById('polje-razred-prof').style.display = checked ? 'block' : 'none';
-    }
-
-    function toggleLozinka() {
-        const inp = document.getElementById('nkLozinka');
-        inp.type  = inp.type === 'password' ? 'text' : 'password';
-    }
-
-    async function ucitajRazredeZaForme() {
-        try {
-            const res     = await fetch('/api/admin/razredi');
-            const razredi = await res.json();
-            const opts    = razredi.map(r => `<option value="${r.id}">${r.naziv} (${r.skolska_god})</option>`).join('');
-            ['nkRazred', 'nkRazredProf'].forEach(id => {
-                document.getElementById(id).innerHTML = '<option value="">— Odaberi razred —</option>' + opts;
-            });
-        } catch(e) {}
-    }
-
-    async function kreirajKorisnika() {
-        const ime      = document.getElementById('nkIme').value.trim();
-        const prezime  = document.getElementById('nkPrezime').value.trim();
-        const email    = document.getElementById('nkEmail').value.trim();
-        const lozinka  = document.getElementById('nkLozinka').value;
-        const uloga    = document.getElementById('nkUloga').value;
-        const alertEl  = document.getElementById('alertNoviK');
-
-        alertEl.classList.remove('show');
-
-        if (!ime || !prezime || !email || !lozinka || !uloga) {
-            prikaziAlert(alertEl, 'error', 'Molimo popunite sva obavezna polja.');
-            return;
-        }
-        if (lozinka.length < 6) {
-            prikaziAlert(alertEl, 'error', 'Lozinka mora imati najmanje 6 znakova.');
-            return;
-        }
-
-        const payload = { ime, prezime, email, lozinka, uloga };
-
-        if (uloga === 'ucenik') {
-            payload.razred_id   = parseInt(document.getElementById('nkRazred').value) || null;
-            payload.datum_upisa = document.getElementById('nkDatumUpisa').value || null;
-        }
-        if (uloga === 'profesor') {
-            payload.je_razredni = document.getElementById('nkJeRazredni').checked ? 1 : 0;
-            payload.razred_id   = payload.je_razredni ? (parseInt(document.getElementById('nkRazredProf').value) || null) : null;
-        }
-
-        try {
-            const res  = await fetch('/api/admin/korisnik', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                prikaziAlert(alertEl, 'error', data.greska || 'Greška pri kreiranju.');
-            } else {
-                prikaziAlert(alertEl, 'success', `✅ Korisnik ${ime} ${prezime} uspješno kreiran!`);
-                ['nkIme','nkPrezime','nkEmail','nkLozinka'].forEach(id => document.getElementById(id).value = '');
-                document.getElementById('nkUloga').value = '';
-                document.getElementById('polja-ucenik').style.display  = 'none';
-                document.getElementById('polja-profesor').style.display = 'none';
-                ucitajRazrede();
-            }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška pri spajanju na server.'); }
-    }
-
-    // ─── RAZREDI ─────────────────────────────────────────────
-    let _sviKorisnici = [];
-    let _aktivniRazredId = null;
-
-    async function ucitajRazrede() {
-        try {
-            const [rRes, kRes] = await Promise.all([
-                fetch('/api/admin/razredi'),
-                fetch('/api/admin/korisnici')
-            ]);
-            const razredi   = await rRes.json();
-            _sviKorisnici   = await kRes.json();
-
-            // Kartice
-            const grid = document.getElementById('razredeGrid');
-            if (!razredi.length) {
-                grid.innerHTML = '<div class="loading" style="grid-column:1/-1">Nema razreda. Kreiraj prvi razred ispod.</div>';
-            } else {
-                grid.innerHTML = razredi.map(r => {
-                    const brojUcenika = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id === r.id).length;
-                    return `
-                        <div class="razred-kartica" id="kartica-${r.id}" onclick="otvoriUcenike(${r.id}, '${r.naziv}', '${r.skolska_god}')">
-                            <div class="razred-k-naziv">${r.naziv}</div>
-                            <div class="razred-k-god">${r.skolska_god}</div>
-                            <div class="razred-k-broj">👤 ${brojUcenika} učenika</div>
-                            ${r.razredni ? `<div class="razred-k-razredni">Razredni: <strong>${r.razredni}</strong></div>` : ''}
-                        </div>
-                    `;
-                }).join('');
+                return res.status(500).json({
+                    greska: 'Greška na serveru.'
+                });
             }
 
-            // Tabela ispod
-            const tb = document.getElementById('tabelaRazredi');
-            tb.innerHTML = razredi.length
-                ? razredi.map(r => `
-                    <tr>
-                        <td><strong>${r.naziv}</strong></td>
-                        <td style="color:#888">${r.skolska_god}</td>
-                        <td style="color:#aaa;font-size:13px">${r.razredni || '—'}</td>
-                        <td><button class="btn-delete" onclick="potvrdiObrisanje('razred', ${r.id}, '${r.naziv}')">🗑 Obriši</button></td>
-                    </tr>`).join('')
-                : '<tr><td colspan="4" class="empty">Nema razreda.</td></tr>';
+            console.log("REZULTATI:", rezultati);
 
-        } catch(e) { console.error(e); }
-    }
+            if (rezultati.length === 0) {
 
-    function otvoriUcenike(razredId, naziv, god) {
-        const panel = document.getElementById('ucenici-panel');
+                return res.status(401).json({
+                    greska: 'Nema korisnika.'
+                });
+            }
 
-        // Ako je isti razred kliknut ponovo — zatvori
-        if (_aktivniRazredId === razredId) {
-            _aktivniRazredId = null;
-            panel.style.display = 'none';
-            document.querySelectorAll('.razred-kartica').forEach(k => k.classList.remove('aktivan'));
-            return;
+            const korisnik = rezultati[0];
+
+            console.log("LOZINKA IZ BAZE:", korisnik.lozinka_hash);
+
+            let poklapanje = false;
+
+            try {
+
+                // ADMIN bez bcrypt-a
+                if (korisnik.uloga === 'admin') {
+
+                    poklapanje =
+                        lozinka === korisnik.lozinka_hash;
+
+                }
+
+                // OSTALI korisnici sa bcrypt-om
+                else {
+
+                    poklapanje = await bcrypt.compare(
+                        lozinka,
+                        korisnik.lozinka_hash
+                    );
+                }
+
+                console.log("POKLAPANJE:", poklapanje);
+
+                if (!poklapanje) {
+
+                    return res.status(401).json({
+                        greska: 'Pogrešna lozinka.'
+                    });
+                }
+
+                res.json({
+                    id: korisnik.id,
+                    ime: korisnik.ime,
+                    prezime: korisnik.prezime,
+                    email: korisnik.email,
+                    uloga: korisnik.uloga
+                });
+
+            } catch (greska) {
+
+                console.log("GRESKA:", greska);
+
+                return res.status(500).json({
+                    greska: 'Greška pri prijavi.'
+                });
+            }
         }
-
-        _aktivniRazredId = razredId;
-
-        // Označi aktivnu karticu
-        document.querySelectorAll('.razred-kartica').forEach(k => k.classList.remove('aktivan'));
-        document.getElementById('kartica-' + razredId).classList.add('aktivan');
-
-        // Filtriraj učenike
-        const ucenici = _sviKorisnici.filter(k => k.uloga === 'ucenik' && k.razred_id === razredId);
-
-        panel.style.display = 'block';
-        panel.innerHTML = `
-            <div class="ucenici-panel">
-                <div class="ucenici-panel-header">
-                    <h3>🏫 Razred ${naziv} — ${god} &nbsp;·&nbsp; <span style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:300;color:rgba(255,255,255,0.6)">${ucenici.length} učenika</span></h3>
-                    <button class="zatvori-btn" onclick="zatvoriUcenike()">✕ Zatvori</button>
-                </div>
-                ${ucenici.length ? `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ime i prezime</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                            <th>Datum upisa</th>
-                            <th>Akcije</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${ucenici.map(u => `
-                            <tr>
-                                <td><strong>${u.ime} ${u.prezime}</strong></td>
-                                <td style="color:#888;font-size:13px">${u.email}</td>
-                                <td><span class="badge ${u.aktivan ? 'badge-aktivan' : 'badge-neaktivan'}">${u.aktivan ? 'Aktivan' : 'Neaktivan'}</span></td>
-                                <td style="color:#aaa;font-size:13px">${u.datum_upisa ? new Date(u.datum_upisa).toLocaleDateString('bs-BA') : '—'}</td>
-                                <td style="display:flex;gap:6px">
-                                    <button class="btn-edit" onclick="toggleAktivanRazred(${u.id}, ${u.aktivan}, ${razredId}, '${naziv}', '${god}')">
-                                        ${u.aktivan ? '🔒 Deaktiviraj' : '🔓 Aktiviraj'}
-                                    </button>
-                                    <button class="btn-delete" onclick="potvrdiObrisanje('korisnik', ${u.id}, '${u.ime} ${u.prezime}')">
-                                        🗑 Obriši
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                ` : `
-                <div class="empty" style="padding:40px">
-                    Ovaj razred nema učenika. Dodaj učenike u tabu "Novi korisnik".
-                </div>
-                `}
-            </div>
-        `;
-
-        // Scroll na panel
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function zatvoriUcenike() {
-        _aktivniRazredId = null;
-        document.getElementById('ucenici-panel').style.display = 'none';
-        document.querySelectorAll('.razred-kartica').forEach(k => k.classList.remove('aktivan'));
-    }
-
-    // Wrapper koji osvježava panel razreda nakon akcije
-    async function toggleAktivanRazred(id, trenutni, razredId, naziv, god) {
-        const noviStatus = trenutni ? 0 : 1;
-        try {
-            await fetch(`/api/admin/korisnik/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ aktivan: noviStatus })
-            });
-            // Osvježi lokalne podatke i ponovo otvori panel
-            const kRes = await fetch('/api/admin/korisnici');
-            _sviKorisnici = await kRes.json();
-            _aktivniRazredId = null; // reset da otvoriUcenike ne zatvori
-            otvoriUcenike(razredId, naziv, god);
-            // Osvježi kartice
-            ucitajRazrede();
-        } catch(e) {}
-    }
-
-    async function kreirajRazred() {
-        const naziv = document.getElementById('razredNaziv').value.trim();
-        const god   = document.getElementById('razredGod').value.trim();
-        const alertEl = document.getElementById('alertRazred');
-        if (!naziv || !god) { prikaziAlert(alertEl, 'error', 'Unesite naziv i školsku godinu.'); return; }
-        try {
-            const res  = await fetch('/api/admin/razred', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ naziv, skolska_god: god })
-            });
-            const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else {
-                prikaziAlert(alertEl, 'success', `✅ Razred ${naziv} kreiran!`);
-                document.getElementById('razredNaziv').value = '';
-                ucitajRazrede();
-            }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
-    }
-
-    // ─── PREDMETI ────────────────────────────────────────────
-    async function ucitajPredmete() {
-        try {
-            const res      = await fetch('/api/predmeti');
-            const predmeti = await res.json();
-            const tb       = document.getElementById('tabelaPredmeti');
-            tb.innerHTML = predmeti.length
-                ? predmeti.map(p => `
-                    <tr>
-                        <td><strong>${p.naziv}</strong></td>
-                        <td style="color:#aaa;font-size:13px">${p.opis || '—'}</td>
-                        <td><button class="btn-delete" onclick="potvrdiObrisanje('predmet', ${p.id}, '${p.naziv}')">🗑 Obriši</button></td>
-                    </tr>`).join('')
-                : '<tr><td colspan="3" class="empty">Nema predmeta.</td></tr>';
-        } catch(e) {}
-    }
-
-    async function kreirajPredmet() {
-        const naziv   = document.getElementById('predmetNaziv').value.trim();
-        const opis    = document.getElementById('predmetOpis').value.trim();
-        const alertEl = document.getElementById('alertPredmet');
-        if (!naziv) { prikaziAlert(alertEl, 'error', 'Unesite naziv predmeta.'); return; }
-        try {
-            const res  = await fetch('/api/admin/predmet', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ naziv, opis })
-            });
-            const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else {
-                prikaziAlert(alertEl, 'success', `✅ Predmet "${naziv}" dodan!`);
-                document.getElementById('predmetNaziv').value = '';
-                document.getElementById('predmetOpis').value  = '';
-                ucitajPredmete();
-            }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
-    }
-
-    // ─── DODJELA PREDMETA ────────────────────────────────────
-    async function ucitajDodjelu() {
-        try {
-            const [kRes, pRes, rRes, dRes] = await Promise.all([
-                fetch('/api/admin/korisnici'),
-                fetch('/api/predmeti'),
-                fetch('/api/admin/razredi'),
-                fetch('/api/admin/dodjele')
-            ]);
-            const korisnici = await kRes.json();
-            const predmeti  = await pRes.json();
-            const razredi   = await rRes.json();
-            const dodjele   = await dRes.json();
-
-            const profesori = korisnici.filter(k => k.uloga === 'profesor');
-            document.getElementById('ddProfesor').innerHTML = '<option value="">— Odaberi profesora —</option>' + profesori.map(p => `<option value="${p.profesor_id}">${p.ime} ${p.prezime}</option>`).join('');
-            document.getElementById('ddPredmet').innerHTML  = '<option value="">— Odaberi predmet —</option>'  + predmeti.map(p => `<option value="${p.id}">${p.naziv}</option>`).join('');
-            document.getElementById('ddRazred').innerHTML   = '<option value="">— Odaberi razred —</option>'   + razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
-
-            const tb = document.getElementById('tabelaDodjele');
-            tb.innerHTML = dodjele.length
-                ? dodjele.map(d => `
-                    <tr>
-                        <td>${d.profesor}</td>
-                        <td>${d.predmet}</td>
-                        <td><strong>${d.razred}</strong></td>
-                    </tr>`).join('')
-                : '<tr><td colspan="3" class="empty">Nema dodjela.</td></tr>';
-        } catch(e) {}
-    }
-
-    async function kreirajDodjelu() {
-        const profesor_id = document.getElementById('ddProfesor').value;
-        const predmet_id  = document.getElementById('ddPredmet').value;
-        const razred_id   = document.getElementById('ddRazred').value;
-        const alertEl     = document.getElementById('alertDodjela');
-
-        if (!profesor_id || !predmet_id || !razred_id) {
-            prikaziAlert(alertEl, 'error', 'Odaberi profesora, predmet i razred.');
-            return;
-        }
-        try {
-            const res  = await fetch('/api/admin/dodjela', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    profesor_id: parseInt(profesor_id),
-                    predmet_id:  parseInt(predmet_id),
-                    razred_id:   parseInt(razred_id)
-                })
-            });
-            const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else { prikaziAlert(alertEl, 'success', '✅ Dodjela uspješno kreirana!'); ucitajDodjelu(); }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
-    }
-
-    // ─── MODAL & BRISANJE ────────────────────────────────────
-    let _brisiTip = null;
-    let _brisiId  = null;
-
-    function potvrdiObrisanje(tip, id, naziv) {
-        _brisiTip = tip;
-        _brisiId  = id;
-        const poruke = {
-            korisnik: `Obrisat ćeš korisnika <strong>${naziv}</strong>. Brišu se i sve njegove ocjene i izostanci!`,
-            razred:   `Obrisat ćeš razred <strong>${naziv}</strong>. Svi učenici tog razreda ostaju bez razreda!`,
-            predmet:  `Obrisat ćeš predmet <strong>${naziv}</strong>. Brišu se sve ocjene i izostanci za taj predmet!`,
-        };
-        document.getElementById('modalTekst').innerHTML = poruke[tip] || `Obrisat ćeš: <strong>${naziv}</strong>`;
-        document.getElementById('modalBtnPotvrdi').onclick = izvrsiObrisanje;
-        document.getElementById('modalOverlay').classList.add('show');
-    }
-
-    function zatvoriModal() {
-        document.getElementById('modalOverlay').classList.remove('show');
-        _brisiTip = null; _brisiId = null;
-    }
-
-    async function izvrsiObrisanje() {
-        if (!_brisiTip || !_brisiId) return;
-        const tip = _brisiTip;
-        const id  = _brisiId;
-        zatvoriModal();
-
-        const urls = {
-            korisnik: `/api/admin/korisnik/${id}`,
-            razred:   `/api/admin/razred/${id}`,
-            predmet:  `/api/admin/predmet/${id}`,
-        };
-        const osvjezi = {
-            korisnik: () => { ucitajKorisnike(); ucitajStatistike(); ucitajRazrede(); },
-            razred:   () => { ucitajRazrede(); ucitajStatistike(); zatvoriUcenike(); },
-            predmet:  () => { ucitajPredmete(); ucitajStatistike(); },
-        };
-
-        try {
-            const res = await fetch(urls[tip], { method: 'DELETE' });
-            if (res.ok) osvjezi[tip]?.();
-            else {
-                const data = await res.json();
-                alert(data.greska || 'Greška pri brisanju.');
-            }
-        } catch(e) { alert('Greška pri spajanju na server.'); }
-    }
-
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('modalOverlay')) zatvoriModal();
+    );
+});
+// ============================================================
+//  UČENIK — ocjene po predmetima
+// ============================================================
+app.get('/api/ucenik/:id/ocjene', (req, res) => {
+    const sql = `
+        SELECT 
+            p.naziv        AS predmet,
+            o.ocjena,
+            o.datum,
+            o.tip,
+            o.komentar,
+            CONCAT(k.ime, ' ', k.prezime) AS profesor
+        FROM ocjene o
+        JOIN predmeti p   ON p.id = o.predmet_id
+        JOIN profesori pr ON pr.id = o.profesor_id
+        JOIN korisnici k  ON k.id = pr.korisnik_id
+        WHERE o.ucenik_id = ?
+        ORDER BY p.naziv, o.datum DESC
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json(rezultati);
     });
+});
 
-    // ─── HELPER ──────────────────────────────────────────────
-    function ulogaLabel(u) {
-        if (u === 'admin')    return 'Admin';
-        if (u === 'profesor') return 'Profesor';
-        return 'Učenik';
-    }
+// ============================================================
+//  UČENIK — prosjeci po predmetima
+// ============================================================
+app.get('/api/ucenik/:id/prosjeci', (req, res) => {
+    const sql = `
+        SELECT 
+            p.naziv AS predmet,
+            ROUND(AVG(o.ocjena), 2) AS prosjek,
+            COUNT(o.id) AS broj_ocjena
+        FROM ocjene o
+        JOIN predmeti p ON p.id = o.predmet_id
+        WHERE o.ucenik_id = ?
+        GROUP BY p.id
+        ORDER BY p.naziv
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json(rezultati);
+    });
+});
 
-    function prikaziAlert(el, tip, poruka) {
-        el.className = `alert alert-${tip} show`;
-        el.textContent = poruka;
-        if (tip === 'success') setTimeout(() => el.classList.remove('show'), 4000);
-    }
+// ============================================================
+//  UČENIK — izostanci
+// ============================================================
+app.get('/api/ucenik/:id/izostanci', (req, res) => {
+    const sql = `
+        SELECT 
+            i.datum,
+            i.cas_broj,
+            i.status,
+            i.razlog,
+            p.naziv AS predmet
+        FROM izostanci i
+        JOIN predmeti p ON p.id = i.predmet_id
+        WHERE i.ucenik_id = ?
+        ORDER BY i.datum DESC
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json(rezultati);
+    });
+});
 
-    function odjava() {
-        sessionStorage.removeItem('korisnik');
-        window.location.href = '/';
-    }
+// ============================================================
+//  UČENIK — raspored časova
+// ============================================================
+app.get('/api/ucenik/:id/raspored', (req, res) => {
+    const sql = `
+        SELECT 
+            r.dan,
+            r.cas_broj,
+            r.vrijeme_od,
+            r.vrijeme_do,
+            p.naziv AS predmet,
+            CONCAT(k.ime, ' ', k.prezime) AS profesor
+        FROM raspored r
+        JOIN predmeti p   ON p.id = r.predmet_id
+        JOIN profesori pr ON pr.id = r.profesor_id
+        JOIN korisnici k  ON k.id = pr.korisnik_id
+        JOIN ucenici u    ON u.razred_id = r.razred_id
+        WHERE u.id = ?
+        ORDER BY FIELD(r.dan, 'Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'), r.cas_broj
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json(rezultati);
+    });
+});
 
-    // ─── PROMJENA RAZREDA UCENIK ──────────────────────────────
-    async function ucitajSelektorePromjenaRazreda() {
-        try {
-            const [kRes, rRes] = await Promise.all([
-                fetch('/api/admin/korisnici'),
-                fetch('/api/admin/razredi')
-            ]);
-            const korisnici = await kRes.json();
-            const razredi   = await rRes.json();
-            const ucenici   = korisnici.filter(k => k.uloga === 'ucenik');
-            document.getElementById('selUcenikRazred').innerHTML =
-                '<option value="">— Odaberi učenika —</option>' +
-                ucenici.map(u => `<option value="${u.id}">${u.ime} ${u.prezime}</option>`).join('');
-            document.getElementById('selNoviRazred').innerHTML =
-                '<option value="">— Odaberi razred —</option>' +
-                razredi.map(r => `<option value="${r.id}">${r.naziv} (${r.skolska_god})</option>`).join('');
-        } catch(e) {}
-    }
+// ============================================================
+//  PROFESOR — upiši ocjenu
+// ============================================================
+app.post('/api/ocjena', (req, res) => {
+    const { ucenik_id, predmet_id, profesor_id, ocjena, datum, tip, komentar } = req.body;
 
-    async function promijeniRazredUcenika() {
-        const korisnik_id = document.getElementById('selUcenikRazred').value;
-        const razred_id   = document.getElementById('selNoviRazred').value;
-        const alertEl     = document.getElementById('alertPromjenaRazreda');
-        if (!korisnik_id || !razred_id) {
-            prikaziAlert(alertEl, 'error', 'Odaberi učenika i razred.');
-            return;
+    if (!ucenik_id || !predmet_id || !profesor_id || !ocjena || !datum)
+        return res.status(400).json({ greska: 'Nedostaju obavezna polja.' });
+    if (ocjena < 1 || ocjena > 5)
+        return res.status(400).json({ greska: 'Ocjena mora biti između 1 i 5.' });
+
+    const sql = `
+        INSERT INTO ocjene (ucenik_id, predmet_id, profesor_id, ocjena, datum, tip, komentar)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    db.query(sql, [ucenik_id, predmet_id, profesor_id, ocjena, datum, tip || 'usmeni', komentar || null], (err, rezultat) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json({ poruka: 'Ocjena uspješno upisana!', id: rezultat.insertId });
+    });
+});
+
+// ============================================================
+//  PROFESOR — bilježi izostanak
+// ============================================================
+app.post('/api/izostanak', (req, res) => {
+    const { ucenik_id, predmet_id, datum, cas_broj } = req.body;
+
+    if (!ucenik_id || !predmet_id || !datum || !cas_broj)
+        return res.status(400).json({ greska: 'Nedostaju obavezna polja.' });
+
+    const sql = `
+        INSERT INTO izostanci (ucenik_id, predmet_id, datum, cas_broj, status)
+        VALUES (?, ?, ?, ?, 'na_cekanju')
+    `;
+    db.query(sql, [ucenik_id, predmet_id, datum, cas_broj], (err, rezultat) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json({ poruka: 'Izostanak zabilježen!', id: rezultat.insertId });
+    });
+});
+
+// ============================================================
+//  RAZREDNI PROFESOR — opravdaj/neopravdaj izostanak
+// ============================================================
+app.put('/api/izostanak/:id/status', (req, res) => {
+    const { status, razlog, opravdao_id } = req.body;
+
+    if (!['opravdan', 'neopravdan'].includes(status))
+        return res.status(400).json({ greska: 'Status mora biti opravdan ili neopravdan.' });
+
+    db.query(
+        'UPDATE izostanci SET status = ?, razlog = ?, opravdao_id = ? WHERE id = ?',
+        [status, razlog || null, opravdao_id, req.params.id],
+        (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+            res.json({ poruka: `Izostanak označen kao ${status}.` });
         }
-        try {
-            const res = await fetch(`/api/admin/ucenik/${korisnik_id}/razred`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ razred_id: parseInt(razred_id) })
+    );
+});
+
+// ============================================================
+//  PROFESOR — raspored časova profesora
+// ============================================================
+app.get('/api/profesor/:id/raspored', (req, res) => {
+    const sql = `
+        SELECT 
+            r.id,
+            r.dan,
+            r.cas_broj,
+            r.vrijeme_od,
+            r.vrijeme_do,
+            p.naziv AS predmet,
+            rz.naziv AS razred
+        FROM raspored r
+        JOIN predmeti p   ON p.id = r.predmet_id
+        JOIN razredi rz   ON rz.id = r.razred_id
+        JOIN profesori pr ON pr.id = r.profesor_id
+        WHERE pr.korisnik_id = ?
+        ORDER BY FIELD(r.dan, 'Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'), r.cas_broj
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json(rezultati);
+    });
+});
+
+// ============================================================
+//  SELEKCIJA — svi predmeti, razredi, učenici razreda
+// ============================================================
+app.get('/api/predmeti', (req, res) => {
+    db.query('SELECT * FROM predmeti ORDER BY naziv', (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.get('/api/profesor/ucenici', (req, res) => {
+    const sql = `
+        SELECT u.id, k.ime, k.prezime, r.naziv AS razred
+        FROM ucenici u
+        JOIN korisnici k ON k.id = u.korisnik_id
+        JOIN razredi r   ON r.id = u.razred_id
+        ORDER BY r.naziv, k.prezime
+    `;
+    db.query(sql, (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.get('/api/razred/:id/ucenici', (req, res) => {
+    const sql = `
+        SELECT u.id, k.ime, k.prezime
+        FROM ucenici u
+        JOIN korisnici k ON k.id = u.korisnik_id
+        WHERE u.razred_id = ?
+        ORDER BY k.prezime
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.get('/api/profesor/:id/info', (req, res) => {
+    const sql = `
+        SELECT p.je_razredni, p.razred_id, r.naziv AS razred
+        FROM profesori p
+        LEFT JOIN razredi r ON r.id = p.razred_id
+        WHERE p.korisnik_id = ?
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati[0] || {});
+    });
+});
+
+app.get('/api/profesor/:id/razredi', (req, res) => {
+    const sql = `
+        SELECT DISTINCT r.id, r.naziv
+        FROM predmet_razred_profesor prp
+        JOIN profesori p ON p.id = prp.profesor_id
+        JOIN razredi r   ON r.id = prp.razred_id
+        WHERE p.korisnik_id = ?
+        ORDER BY r.naziv
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.get('/api/profesor/:profId/razred/:razredId/predmeti', (req, res) => {
+    const sql = `
+        SELECT p.id, p.naziv
+        FROM predmet_razred_profesor prp
+        JOIN predmeti p    ON p.id = prp.predmet_id
+        JOIN profesori pr  ON pr.id = prp.profesor_id
+        WHERE pr.korisnik_id = ? AND prp.razred_id = ?
+    `;
+    db.query(sql, [req.params.profId, req.params.razredId], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+// ============================================================
+//  PROFESOR — izostanci razreda (za pravdanje)
+// ============================================================
+app.get('/api/profesor/:id/izostanci', (req, res) => {
+    const sql = `
+        SELECT 
+            i.id, i.datum, i.cas_broj, i.status,
+            CONCAT(k.ime, ' ', k.prezime) AS ucenik,
+            p.naziv AS predmet
+        FROM izostanci i
+        JOIN ucenici u   ON u.id = i.ucenik_id
+        JOIN korisnici k ON k.id = u.korisnik_id
+        JOIN predmeti p  ON p.id = i.predmet_id
+        JOIN profesori pr ON pr.korisnik_id = ?
+        WHERE u.razred_id = pr.razred_id
+          AND i.status = 'na_cekanju'
+        ORDER BY i.datum DESC
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+// ============================================================
+//  VLADANJE
+// ============================================================
+app.get('/api/razred/:id/vladanje', (req, res) => {
+    const sql = `
+        SELECT 
+            CONCAT(k.ime, ' ', k.prezime) AS ucenik,
+            v.polugodiste, v.ocjena, v.biljeska
+        FROM vladanje v
+        JOIN ucenici u   ON u.id = v.ucenik_id
+        JOIN korisnici k ON k.id = u.korisnik_id
+        WHERE u.razred_id = ?
+        ORDER BY k.prezime, v.polugodiste
+    `;
+    db.query(sql, [req.params.id], (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.post('/api/vladanje', (req, res) => {
+    const { ucenik_id, ocjena, polugodiste, biljeska, postavio_id } = req.body;
+    if (!ucenik_id || !ocjena || !polugodiste || !postavio_id)
+        return res.status(400).json({ greska: 'Nedostaju obavezna polja.' });
+
+    db.query(
+        'SELECT r.skolska_god FROM ucenici u JOIN razredi r ON r.id = u.razred_id WHERE u.id = ?',
+        [ucenik_id],
+        (err, rows) => {
+            if (err || !rows.length) return res.status(500).json({ greska: 'Greška.' });
+            const skolska_god = rows[0].skolska_god;
+            const sql = `
+                INSERT INTO vladanje (ucenik_id, skolska_god, polugodiste, ocjena, biljeska, postavio_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE ocjena = VALUES(ocjena), biljeska = VALUES(biljeska), postavio_id = VALUES(postavio_id)
+            `;
+            db.query(sql, [ucenik_id, skolska_god, polugodiste, ocjena, biljeska || null, postavio_id], (err2) => {
+                if (err2) return res.status(500).json({ greska: 'Greška pri upisu vladanja.' });
+                res.json({ poruka: 'Vladanje upisano!' });
             });
-            const data = await res.json();
-            if (!res.ok) prikaziAlert(alertEl, 'error', data.greska);
-            else { prikaziAlert(alertEl, 'success', '✅ Razred učenika uspješno promijenjen!'); ucitajRazrede(); }
-        } catch(e) { prikaziAlert(alertEl, 'error', 'Greška.'); }
-    }
-
-    // ─── RASPORED ────────────────────────────────────────────
-    const DANI = ['Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'];
-    const CASOVI = [1,2,3,4,5,6,7];
-
-    let _rasporedPodaci = { razredi:[], dodjele:[], raspored:[], trenutniRazred:null };
-
-    async function ucitajSelektoreRaspored() {
-        try {
-            const [rRes, dRes] = await Promise.all([
-                fetch('/api/admin/razredi'),
-                fetch('/api/admin/dodjele')
-            ]);
-            _rasporedPodaci.razredi  = await rRes.json();
-            _rasporedPodaci.dodjele  = await dRes.json();
-            const sel = document.getElementById('rRazredSelect');
-            sel.innerHTML = '<option value="">— Odaberi razred —</option>' +
-                _rasporedPodaci.razredi.map(r => `<option value="${r.id}">${r.naziv}</option>`).join('');
-        } catch(e) {}
-    }
-
-    async function ucitajRaspored() {
-        try {
-            const res = await fetch('/api/admin/raspored');
-            _rasporedPodaci.raspored = await res.json();
-            if (_rasporedPodaci.trenutniRazred) renderGrid();
-        } catch(e) {}
-    }
-
-    async function promijeniRazredRaspored() {
-        const razredId = document.getElementById('rRazredSelect').value;
-        _rasporedPodaci.trenutniRazred = razredId ? +razredId : null;
-        if (!razredId) {
-            document.getElementById('predmetiSidebar').innerHTML = '<p style="color:#aaa;font-size:13px;text-align:center;padding:20px 0">Odaberi razred</p>';
-            renderGrid();
-            return;
         }
-        await ucitajRaspored();
-        renderSidebar();
-        renderGrid();
-    }
+    );
+});
 
-    function predmetiZaRazred(razredId) {
-        return _rasporedPodaci.dodjele.filter(d => {
-            const razred = _rasporedPodaci.razredi.find(r => r.id === razredId);
-            return razred && d.razred === razred.naziv;
-        });
-    }
+// ============================================================
+//  ADMIN — korisnici
+// ============================================================
+app.get('/api/admin/korisnici', (req, res) => {
+    const sql = `
+    SELECT
+        k.id,
+        k.ime,
+        k.prezime,
+        k.email,
+        k.uloga,
+        k.aktivan,
+        k.kreiran_datum,
 
-    function renderSidebar() {
-        const razredId = _rasporedPodaci.trenutniRazred;
-        const sidebar  = document.getElementById('predmetiSidebar');
-        const predmeti = predmetiZaRazred(razredId);
+        pr.id AS profesor_id,
 
-        if (!predmeti.length) {
-            sidebar.innerHTML = '<p style="color:#aaa;font-size:13px;text-align:center;padding:20px 0">Nema dodijeljenih predmeta.<br>Idi na "Dodjela predmeta".</p>';
-            return;
-        }
+        u.razred_id,
+        u.datum_upisa
 
-        sidebar.innerHTML = `
-            <p style="font-size:11px;color:#aaa;margin-bottom:10px;letter-spacing:0.5px">Prevuci u raspored</p>
-            ${predmeti.map(d => `
-                <div class="sidebar-predmet" draggable="true"
-                    data-predmet="${encodeURIComponent(d.predmet)}"
-                    data-profesor="${encodeURIComponent(d.profesor)}"
-                    ondragstart="onDragStart(event)"
-                    style="background:#f4f0e8;border:1px solid #e8e4dc;border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:grab;font-size:13px;transition:all 0.15s">
-                    <div style="font-weight:500;color:#0f1b2d">${d.predmet}</div>
-                    <div style="font-size:11px;color:#aaa;margin-top:2px">${d.profesor}</div>
-                </div>
-            `).join('')}
-            <p style="font-size:11px;color:#ccc;margin-top:12px;text-align:center">Klikni ✕ na ćeliji da ukloniš</p>
-        `;
+    FROM korisnici k
 
-        sidebar.querySelectorAll('.sidebar-predmet').forEach(el => {
-            el.addEventListener('mouseenter', () => el.style.background = '#e8e4dc');
-            el.addEventListener('mouseleave', () => el.style.background = '#f4f0e8');
-        });
-    }
+    LEFT JOIN profesori pr
+        ON pr.korisnik_id = k.id
 
-    function renderGrid() {
-        const razredId  = _rasporedPodaci.trenutniRazred;
-        const raspored  = _rasporedPodaci.raspored.filter(r => {
-            if (!razredId) return false;
-            const razred = _rasporedPodaci.razredi.find(rz => rz.id === razredId);
-            return razred && r.razred === razred.naziv;
-        });
+    LEFT JOIN ucenici u
+        ON u.korisnik_id = k.id
 
-        const tbody = document.getElementById('rasporedGridBody');
+    ORDER BY k.uloga, k.prezime
+`;
+    db.query(sql, (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
+        res.json(rezultati);
+    });
+});
 
-        if (!razredId) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#aaa;font-size:14px">Odaberi razred gore</td></tr>`;
-            return;
-        }
+app.post('/api/admin/korisnik', async (req, res) => {
+    const { ime, prezime, email, lozinka, uloga, razred_id, datum_upisa, je_razredni } = req.body;
 
-        tbody.innerHTML = CASOVI.map(cas => `
-            <tr>
-                <td style="padding:8px 16px;font-size:12px;font-weight:500;color:#aaa;border-bottom:1px solid #f0ece4;white-space:nowrap">${cas}. čas</td>
-                ${DANI.map(dan => {
-                    const termin = raspored.find(r => r.dan === dan && r.cas_broj === cas);
-                    if (termin) {
-                        return `<td style="padding:6px;border-bottom:1px solid #f0ece4;border-left:1px solid #f0ece4">
-                            <div style="background:#0f1b2d;color:white;border-radius:6px;padding:8px 10px;font-size:12px;position:relative;min-height:52px">
-                                <div style="font-weight:500;padding-right:18px">${termin.predmet}</div>
-                                <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px">${termin.profesor}</div>
-                                <button onclick="obrisiTermin(${termin.id})" style="position:absolute;top:4px;right:4px;background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px" title="Ukloni">✕</button>
-                            </div>
-                        </td>`;
-                    } else {
-                        return `<td class="grid-cell-empty" data-dan="${dan}" data-cas="${cas}"
-                            style="padding:6px;border-bottom:1px solid #f0ece4;border-left:1px solid #f0ece4;min-width:120px;min-height:64px"
-                            ondragover="onDragOver(event)"
-                            ondragleave="onDragLeave(event)"
-                            ondrop="onDrop(event)">
-                            <div style="height:52px;border:2px dashed #e8e4dc;border-radius:6px;display:flex;align-items:center;justify-content:center">
-                                <span style="font-size:11px;color:#ddd">+</span>
-                            </div>
-                        </td>`;
-                    }
-                }).join('')}
-            </tr>
-        `).join('');
-    }
+    if (!ime || !prezime || !email || !lozinka || !uloga)
+        return res.status(400).json({ greska: 'Nedostaju obavezna polja.' });
+    if (!['admin', 'profesor', 'ucenik'].includes(uloga))
+        return res.status(400).json({ greska: 'Neispravna uloga.' });
 
-    // ─── DRAG & DROP ─────────────────────────────────────────
-    let _dragData = null;
+    try {
+        const hash = await bcrypt.hash(lozinka, 12);
+        db.query(
+            'INSERT INTO korisnici (ime, prezime, email, lozinka_hash, uloga) VALUES (?, ?, ?, ?, ?)',
+            [ime, prezime, email, hash, uloga],
+            (err, rezultat) => {
+                if (err) {
+                    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ greska: 'Email adresa već postoji.' });
+                    return res.status(500).json({ greska: 'Greška pri kreiranju korisnika.' });
+                }
 
-    function onDragStart(event) {
-        _dragData = {
-            predmet:  decodeURIComponent(event.currentTarget.dataset.predmet),
-            profesor: decodeURIComponent(event.currentTarget.dataset.profesor),
-        };
-        event.currentTarget.style.opacity = '0.5';
-        setTimeout(() => event.currentTarget.style.opacity = '1', 0);
-    }
+                const novId = rezultat.insertId;
 
-    function onDragOver(event) {
-        event.preventDefault();
-        const cell = event.currentTarget;
-        cell.querySelector('div').style.borderColor = '#e8a020';
-        cell.querySelector('div').style.background  = '#fffbf2';
-    }
-
-    function onDragLeave(event) {
-        const cell = event.currentTarget;
-        cell.querySelector('div').style.borderColor = '#e8e4dc';
-        cell.querySelector('div').style.background  = '';
-    }
-
-    async function onDrop(event) {
-        event.preventDefault();
-        const cell = event.currentTarget;
-        cell.querySelector('div').style.borderColor = '#e8e4dc';
-        cell.querySelector('div').style.background  = '';
-
-        if (!_dragData) return;
-
-        const dan     = cell.dataset.dan;
-        const cas     = +cell.dataset.cas;
-        const razredId = _rasporedPodaci.trenutniRazred;
-
-        const razred  = _rasporedPodaci.razredi.find(r => r.id === razredId);
-        const dodjela = _rasporedPodaci.dodjele.find(d =>
-            d.predmet === _dragData.predmet && d.razred === razred.naziv
+                if (uloga === 'ucenik') {
+                    db.query(
+                        'INSERT INTO ucenici (korisnik_id, razred_id, datum_upisa) VALUES (?, ?, ?)',
+                        [novId, razred_id || null, datum_upisa || null],
+                        (err2) => {
+                            if (err2) return res.status(500).json({ greska: 'Korisnik kreiran, greška pri dodavanju u razred.' });
+                            res.json({ poruka: 'Učenik kreiran!', id: novId });
+                        }
+                    );
+                } else if (uloga === 'profesor') {
+                    const jeRazredni = je_razredni ? 1 : 0;
+                    db.query(
+                        'INSERT INTO profesori (korisnik_id, je_razredni, razred_id) VALUES (?, ?, ?)',
+                        [novId, jeRazredni, jeRazredni ? (razred_id || null) : null],
+                        (err2) => {
+                            if (err2) return res.status(500).json({ greska: 'Korisnik kreiran, greška pri kreiranju profila profesora.' });
+                            res.json({ poruka: 'Profesor kreiran!', id: novId });
+                        }
+                    );
+                } else {
+                    res.json({ poruka: 'Admin kreiran!', id: novId });
+                }
+            }
         );
+    } catch(e) {
+        res.status(500).json({ greska: 'Greška pri hashiranju lozinke.' });
+    }
+});
 
-        if (!dodjela) {
-            prikaziAlert(document.getElementById('alertRaspored'), 'error', 'Greška: dodjela nije pronađena.');
+app.put('/api/admin/korisnik/:id/status', (req, res) => {
+    const { aktivan } = req.body;
+    db.query('UPDATE korisnici SET aktivan = ? WHERE id = ?', [aktivan, req.params.id], (err) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json({ poruka: 'Status ažuriran.' });
+    });
+});
+
+// ─── ADMIN: promijeni razred učenika ──────────────────────────
+app.put('/api/admin/ucenik/:id/razred', (req, res) => {
+
+    console.log("PARAMS:", req.params);
+    console.log("BODY:", req.body);
+
+    const { razred_id } = req.body;
+
+    if (!razred_id) {
+
+        return res.status(400).json({
+            greska: 'Nedostaje razred_id.'
+        });
+    }
+
+    db.query(
+        'UPDATE ucenici SET razred_id = ? WHERE korisnik_id = ?',
+        [razred_id, req.params.id],
+
+        (err, rezultat) => {
+
+            console.log("MYSQL GRESKA:", err);
+            console.log("MYSQL REZULTAT:", rezultat);
+
+            if (err) {
+
+                return res.status(500).json({
+                    greska: 'Greška pri promjeni razreda.'
+                });
+            }
+
+            res.json({
+                poruka: 'Razred učenika ažuriran.'
+            });
+        }
+    );
+});
+
+app.delete('/api/admin/korisnik/:id', (req, res) => {
+    db.query('DELETE FROM korisnici WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ greska: 'Greška pri brisanju korisnika.' });
+        res.json({ poruka: 'Korisnik obrisan.' });
+    });
+});
+
+// ============================================================
+//  ADMIN — razredi
+// ============================================================
+app.get('/api/admin/razredi', (req, res) => {
+    const sql = `
+        SELECT r.id, r.naziv, r.skolska_god,
+               CONCAT(k.ime, ' ', k.prezime) AS razredni
+        FROM razredi r
+        LEFT JOIN profesori p  ON p.razred_id = r.id AND p.je_razredni = 1
+        LEFT JOIN korisnici k  ON k.id = p.korisnik_id
+        ORDER BY r.skolska_god DESC, r.naziv
+    `;
+    db.query(sql, (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.post('/api/admin/razred', (req, res) => {
+    const { naziv, skolska_god } = req.body;
+    if (!naziv || !skolska_god) return res.status(400).json({ greska: 'Nedostaju polja.' });
+    db.query('INSERT INTO razredi (naziv, skolska_god) VALUES (?, ?)', [naziv, skolska_god], (err, r) => {
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ greska: 'Taj razred već postoji za tu školsku godinu.' });
+            return res.status(500).json({ greska: 'Greška.' });
+        }
+        res.json({ poruka: 'Razred kreiran!', id: r.insertId });
+    });
+});
+
+app.delete('/api/admin/razred/:id', (req, res) => {
+    const id = req.params.id;
+    // Nullify all FK references before deleting
+    const koraci = [
+        'UPDATE ucenici SET razred_id = NULL WHERE razred_id = ?',
+        'UPDATE profesori SET je_razredni = 0, razred_id = NULL WHERE razred_id = ?',
+        'DELETE FROM predmet_razred_profesor WHERE razred_id = ?',
+        'DELETE FROM raspored WHERE razred_id = ?',
+    ];
+    let i = 0;
+    function sljedeci() {
+        if (i >= koraci.length) {
+            db.query('DELETE FROM razredi WHERE id = ?', [id], (err) => {
+                if (err) return res.status(500).json({ greska: 'Greška pri brisanju razreda.' });
+                res.json({ poruka: 'Razred obrisan.' });
+            });
             return;
         }
+        db.query(koraci[i++], [id], (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška pri čišćenju veza razreda.' });
+            sljedeci();
+        });
+    }
+    sljedeci();
+});
 
-        try {
-            const [kRes, pRes] = await Promise.all([
-                fetch('/api/admin/korisnici'),
-                fetch('/api/predmeti')
-            ]);
-            const korisnici = await kRes.json();
-            const predmeti  = await pRes.json();
-
-            const predmet  = predmeti.find(p => p.naziv === dodjela.predmet);
-            const profesor = korisnici.find(k =>
-                k.uloga === 'profesor' &&
-                (k.ime + ' ' + k.prezime) === dodjela.profesor
-            );
-
-            if (!predmet || !profesor) {
-                prikaziAlert(document.getElementById('alertRaspored'), 'error', 'Greška: predmet ili profesor nisu pronađeni.');
-                return;
-            }
-
-            const profesor_id = profesor.profesor_id || profesor.id;
-
-            const res = await fetch('/api/admin/raspored', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    razred_id:  razredId,
-                    predmet_id: predmet.id,
-                    profesor_id: profesor_id,
-                    dan,
-                    cas_broj: cas,
-                    vrijeme_od: null,
-                    vrijeme_do: null
-                })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                prikaziAlert(document.getElementById('alertRaspored'), 'error', data.greska);
-            } else {
-                await ucitajRaspored();
-            }
-        } catch(e) {
-            prikaziAlert(document.getElementById('alertRaspored'), 'error', 'Greška pri spajanju.');
+// ============================================================
+//  ADMIN — predmeti
+// ============================================================
+app.post('/api/admin/predmet', (req, res) => {
+    const { naziv, opis } = req.body;
+    if (!naziv) return res.status(400).json({ greska: 'Naziv je obavezan.' });
+    db.query('INSERT INTO predmeti (naziv, opis) VALUES (?, ?)', [naziv, opis || null], (err, r) => {
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ greska: 'Predmet s tim nazivom već postoji.' });
+            return res.status(500).json({ greska: 'Greška.' });
         }
+        res.json({ poruka: 'Predmet dodan!', id: r.insertId });
+    });
+});
 
-        _dragData = null;
-    }
+app.delete('/api/admin/predmet/:id', (req, res) => {
+    db.query('DELETE FROM predmeti WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ greska: 'Greška pri brisanju predmeta.' });
+        res.json({ poruka: 'Predmet obrisan.' });
+    });
+});
 
-    async function obrisiTermin(id) {
-        try {
-            const res = await fetch(`/api/admin/raspored/${id}`, { method: 'DELETE' });
-            if (res.ok) await ucitajRaspored();
-        } catch(e) {}
-    }
+// ============================================================
+//  ADMIN — razredni starješina
+// ============================================================
+app.post('/api/admin/razredni', (req, res) => {
+    const { korisnik_id, razred_id } = req.body;
+    if (!korisnik_id || !razred_id) return res.status(400).json({ greska: 'Nedostaju polja.' });
 
-    init();
-</script>
-</body>
-</html>
-ENDOFFILE
-echo "Done"
-Output
+    db.query(
+        'UPDATE profesori SET je_razredni = 0, razred_id = NULL WHERE razred_id = ?',
+        [razred_id],
+        (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška.' });
+            db.query(
+                'UPDATE profesori SET je_razredni = 1, razred_id = ? WHERE korisnik_id = ?',
+                [razred_id, korisnik_id],
+                (err2) => {
+                    if (err2) return res.status(500).json({ greska: 'Greška pri postavljanju razrednog.' });
+                    res.json({ poruka: 'Razredni starješina dodijeljen!' });
+                }
+            );
+        }
+    );
+});
 
-Done
+app.delete('/api/admin/razredni', (req, res) => {
+    const { korisnik_id } = req.body;
+    db.query(
+        'UPDATE profesori SET je_razredni = 0, razred_id = NULL WHERE korisnik_id = ?',
+        [korisnik_id],
+        (err) => {
+            if (err) return res.status(500).json({ greska: 'Greška.' });
+            res.json({ poruka: 'Razredni starješina uklonjen.' });
+        }
+    );
+});
+
+// ============================================================
+//  ADMIN — dodjele predmeta
+// ============================================================
+app.get('/api/admin/dodjele', (req, res) => {
+    const sql = `
+        SELECT 
+            CONCAT(k.ime, ' ', k.prezime) AS profesor,
+            p.naziv AS predmet,
+            r.naziv AS razred,
+            prp.profesor_id,
+            prp.predmet_id,
+            prp.razred_id
+        FROM predmet_razred_profesor prp
+        JOIN profesori pr ON pr.id = prp.profesor_id
+        JOIN korisnici k  ON k.id = pr.korisnik_id
+        JOIN predmeti p   ON p.id = prp.predmet_id
+        JOIN razredi r    ON r.id = prp.razred_id
+        ORDER BY r.naziv, p.naziv
+    `;
+    db.query(sql, (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.post('/api/admin/dodjela', (req, res) => {
+        console.log('DODJELA BODY:', req.body); 
+    const { profesor_id, predmet_id, razred_id } = req.body;
+    if (!profesor_id || !predmet_id || !razred_id)
+        return res.status(400).json({ greska: 'Nedostaju polja.' });
+
+    db.query(
+        'INSERT INTO predmet_razred_profesor (predmet_id, razred_id, profesor_id) VALUES (?, ?, ?)',
+        [predmet_id, razred_id, profesor_id],
+        (err) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ greska: 'Ta dodjela već postoji.' });
+                return res.status(500).json({ greska: 'Greška.' });
+            }
+            res.json({ poruka: 'Dodjela kreirana!' });
+        }
+    );
+});
+
+// ============================================================
+//  ADMIN — raspored časova (CRUD)
+// ============================================================
+app.get('/api/admin/raspored', (req, res) => {
+    const sql = `
+        SELECT 
+            r.id,
+            r.dan,
+            r.cas_broj,
+            r.vrijeme_od,
+            r.vrijeme_do,
+            p.naziv  AS predmet,
+            rz.naziv AS razred,
+            CONCAT(k.ime, ' ', k.prezime) AS profesor
+        FROM raspored r
+        JOIN predmeti p   ON p.id  = r.predmet_id
+        JOIN razredi rz   ON rz.id = r.razred_id
+        JOIN profesori pr ON pr.id = r.profesor_id
+        JOIN korisnici k  ON k.id  = pr.korisnik_id
+        ORDER BY rz.naziv, FIELD(r.dan,'Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'), r.cas_broj
+    `;
+    db.query(sql, (err, rezultati) => {
+        if (err) return res.status(500).json({ greska: 'Greška.' });
+        res.json(rezultati);
+    });
+});
+
+app.post('/api/admin/raspored', (req, res) => {
+    const { razred_id, predmet_id, profesor_id, dan, cas_broj, vrijeme_od, vrijeme_do } = req.body;
+    if (!razred_id || !predmet_id || !profesor_id || !dan || !cas_broj)
+        return res.status(400).json({ greska: 'Nedostaju obavezna polja.' });
+
+    db.query(
+        `INSERT INTO raspored (razred_id, predmet_id, profesor_id, dan, cas_broj, vrijeme_od, vrijeme_do)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [razred_id, predmet_id, profesor_id, dan, cas_broj, vrijeme_od || null, vrijeme_do || null],
+        (err, r) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY')
+                    return res.status(400).json({ greska: 'Taj termin je već zauzet za ovaj razred.' });
+                return res.status(500).json({ greska: 'Greška.' });
+            }
+            res.json({ poruka: 'Termin dodan!', id: r.insertId });
+        }
+    );
+});
+
+app.delete('/api/admin/raspored/:id', (req, res) => {
+    db.query('DELETE FROM raspored WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ greska: 'Greška pri brisanju.' });
+        res.json({ poruka: 'Termin obrisan.' });
+    });
+});
+
+// ============================================================
+//  POKRETANJE
+// ============================================================
+app.listen(PORT, () => console.log(`✅ Server pokrenut na http://localhost:${PORT}`));
