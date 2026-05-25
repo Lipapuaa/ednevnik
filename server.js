@@ -33,6 +33,49 @@ app.post('/api/login', (req, res) => {
     const { email, lozinka } = req.body;
     if (!email || !lozinka)
         return res.status(400).json({ greska: 'Email i lozinka su obavezni.' });
+    app.post('/api/login', (req, res) => {
+    const { email, lozinka } = req.body;
+
+    console.log("BODY:", req.body);
+
+    db.query(
+        'SELECT * FROM korisnici WHERE email = ? AND aktivan = 1',
+        [email],
+        async (err, rezultati) => {
+
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ greska: 'Greška na serveru.' });
+            }
+
+            console.log("REZULTATI:", rezultati);
+
+            if (rezultati.length === 0) {
+                return res.status(401).json({ greska: 'Nema korisnika.' });
+            }
+
+            const korisnik = rezultati[0];
+
+            console.log("HASH IZ BAZE:", korisnik.lozinka_hash);
+
+            const poklapanje = await bcrypt.compare(
+                lozinka,
+                korisnik.lozinka_hash
+            );
+
+            console.log("POKLAPANJE:", poklapanje);
+
+            if (!poklapanje) {
+                return res.status(401).json({ greska: 'Pogrešna lozinka.' });
+            }
+
+            res.json({
+                id: korisnik.id,
+                email: korisnik.email
+            });
+        }
+    );
+});
 
     db.query('SELECT * FROM korisnici WHERE email = ? AND aktivan = 1', [email], async (err, rezultati) => {
         if (err) return res.status(500).json({ greska: 'Greška na serveru.' });
