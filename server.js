@@ -207,7 +207,7 @@ app.get('/api/ucenik/:id/raspored', (req, res) => {
         JOIN profesori pr ON pr.id = r.profesor_id
         JOIN korisnici k  ON k.id = pr.korisnik_id
         JOIN ucenici u    ON u.razred_id = r.razred_id
-        WHERE u.id = ?
+        WHERE u.korisnik_id = ?
         ORDER BY FIELD(r.dan, 'Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak'), r.cas_broj
     `;
     db.query(sql, [req.params.id], (err, rezultati) => {
@@ -709,7 +709,10 @@ app.get('/api/admin/dodjele', (req, res) => {
         SELECT 
             CONCAT(k.ime, ' ', k.prezime) AS profesor,
             p.naziv AS predmet,
-            r.naziv AS razred
+            r.naziv AS razred,
+            prp.profesor_id,
+            prp.predmet_id,
+            prp.razred_id
         FROM predmet_razred_profesor prp
         JOIN profesori pr ON pr.id = prp.profesor_id
         JOIN korisnici k  ON k.id = pr.korisnik_id
